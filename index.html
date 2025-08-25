@@ -44,8 +44,9 @@ body { background: var(--bg); color: var(--text); font-family: Inter, Arial, san
 .edit-channel {display: none; background: var(--danger); color: #fff; border: none; border-radius: 8px; padding: 7px 13px;
 font-weight: 600; margin-top: 10px; cursor: pointer;}
 .edit-mode .edit-channel { display: block; }
-.all-links {background:#b58d2b;color:#fff;border-radius:13px;padding: 14px 4px;text-align:center;font-weight:600;margin:0 8px 22px;}
+.all-links {background:#b58d2b;color:#fff;border-radius:13px;padding: 14px 4px;text-align:center;font-weight:600;margin:0 8px 18px;}
 .all-links a {color:inherit;padding:0 6px;text-decoration:underline dotted;}
+#siteViews { text-align:center;margin:0 0 26px 0; color:#4957af;font-weight:700;font-size:1.12em; letter-spacing:.06em;}
 .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:100;}
 .modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
          width:min(360px,99vw);max-height:88vh;background:var(--cardBG);border-radius:12px;
@@ -101,8 +102,9 @@ font-weight: 600; margin-top: 10px; cursor: pointer;}
       <a href="https://t.me/+HmSJBcxckzs4MjI1">Udaya TV</a>
       <a href="https://t.me/+0KEBs-FBbrVjMjRl">Zee Power</a>
     </div>
+    <div id="siteViews"></div>
   </div>
-  <!-- Modal -->
+  <!-- Modal, lock, scripts below... -->
   <div id="overlay" class="overlay"></div>
   <div id="modal" class="modal">
     <div class="m-head"><div id="mTitle" class="m-title"></div>
@@ -378,6 +380,12 @@ function checkPassword(){
   }else{alert('❌ Wrong password!');document.getElementById('pw').value='';}
 }
 render();
+// GLOBAL VIEWS COUNTER (CountAPI) -- this runs once page loads
+fetch('https://api.countapi.xyz/hit/kndtv/v1')
+ .then(res=>res.json())
+ .then(data=>{
+   document.getElementById('siteViews').textContent = data.value + ' views';
+ });
 </script>
 </body>
 </html>
