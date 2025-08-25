@@ -2,390 +2,250 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Kannada TV Schedule - SB-KAN</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Kannada TV Schedule – SB-KAN</title>
 <style>
-:root {
-  --bg: #f8fafc;
-  --cardBG: #fff;
-  --text: #212b36;
-  --accent: #3b82f6;
-  --brand: #8b5cf6;
-  --danger: #ef4444;
-  --glass: rgba(255,255,255,0.98);
-  --shadow: 0 4px 16px rgba(0,0,0,0.09);
+:root{
+  --bg:#f8fafc;--cardBG:#fff;--text:#212b36;--accent:#3b82f6;--brand:#8b5cf6;
+  --glass:rgba(255,255,255,.98);--shadow:0 4px 16px rgba(0,0,0,.09)
 }
-html[data-dark="true"] {
-  --bg: #181e2b;
-  --cardBG: #262c3d;
-  --text: #e2e8f0;
-  --accent: #60a5fa;
-  --brand: #a78bfa;
-  --danger: #f87171;
-  --glass: rgba(38,44,61,1);
-  --shadow: 0 8px 24px rgba(0,0,0,0.18);
+html[data-dark=true]{
+  --bg:#181e2b;--cardBG:#262c3d;--text:#e2e8f0;--accent:#60a5fa;--brand:#a78bfa;
+  --glass:rgba(38,44,61,1)
 }
-body { background: var(--bg); color: var(--text); font-family: Inter, Arial, sans-serif; margin: 0; min-height: 100vh; }
-.header { text-align: center; padding: 20px 8px 0; }
-.h-title { font-size: 2em; font-weight: 900; color: var(--accent); margin-bottom: 10px; }
-.toolbar { display: flex; justify-content: center; gap: 8px; margin: 11px 0 15px 0; flex-wrap: wrap; }
-.btn { background: var(--cardBG); color: var(--accent); border: none; border-radius: 8px; padding: 8px 19px; font-weight: 700;
-       box-shadow: var(--shadow); cursor: pointer; font-size: 1em; transition: background 0.2s, color 0.2s; }
-.btn.primary { background: var(--accent); color: #fff; }
-.grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(245px,1fr)); gap: 18px; margin: 24px 0; padding: 0 6px;}
-.card { background: var(--cardBG); border-radius: 15px; box-shadow: var(--shadow); padding: 16px;}
-.logo {font-size:1.3em;background: var(--accent);color: #fff;border-radius:8px;padding:7px 13px;font-weight:900;margin-right:7px;}
-.c-name { font-size:1.1em;font-weight:700;}
-.join {background: var(--accent);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-weight:600;float:right;text-decoration:none;font-size:.93em;}
-.sections {margin-top:8px;}
-.section {background:var(--glass);border-radius:8px;margin:8px 0;padding:10px 13px;font-weight:700;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
-.section.selected, .section:active {box-shadow: 0 0 0 5px var(--modalAccent,#3b82f6);}
-.badge {background:var(--brand);color:#fff;border-radius:10px;padding:3px 10px;font-size:0.9em;font-weight:700;}
-.edit-channel {display: none; background: var(--danger); color: #fff; border: none; border-radius: 8px; padding: 7px 13px;
-font-weight: 600; margin-top: 10px; cursor: pointer;}
-.edit-mode .edit-channel { display: block; }
-.all-links {background:#b58d2b;color:#fff;border-radius:13px;padding: 14px 4px;text-align:center;font-weight:600;margin:0 8px 18px;}
-.all-links a {color:inherit;padding:0 6px;text-decoration:underline dotted;}
-#siteViews { text-align:center;margin:0 0 26px 0; color:#4957af;font-weight:700;font-size:1.12em; letter-spacing:.06em;}
-.overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:100;}
-.modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
-         width:min(360px,99vw);max-height:88vh;background:var(--cardBG);border-radius:12px;
-         box-shadow:var(--shadow);overflow:hidden;z-index:101;}
-.m-head {background:var(--glass);padding:14px 10px 10px;display:flex;justify-content:space-between;align-items:center;}
-.m-title {font-weight:700;font-size:1.13em;}
-.m-title.accent { color: var(--modalAccent,#3b82f6);}
-.m-back {background:var(--danger);color:#fff;border:none;border-radius:8px;padding:7px 15px;font-weight:600;cursor:pointer;}
-.add-row {display:none;gap:10px;padding:10px;}
-.edit-mode .add-row {display: flex;}
-.add-btn {background:var(--accent);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-weight:700;cursor:pointer;}
-.add-btn.secondary {background:var(--danger);}
-.vlist-viewport {max-height:55vh;overflow-y:auto;padding:9px;}
-.list {list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;}
-.item {background:var(--glass);border-radius:8px;padding:11px;display:flex;flex-direction:column;}
-.i-row {display:flex;justify-content:space-between;align-items:center;gap:9px;margin-bottom:5px;}
-.i-meta {display:flex;align-items:center;gap:8px;}
-.drag {display:none;font-size:15px;color:var(--accent);cursor:grab;}
-.edit-mode .drag {display: inline;}
-.title {font-weight:700;}
-.info {font-style:italic;color:var(--brand);font-size:13px;}
-.time {background:var(--modalAccent,#3b82f6);color:#fff;padding:5px 12px;border-radius:13px;font-weight:600;font-size:13px;}
-.i-edit { display:none; background: var(--danger); color:#fff; border:none;border-radius:8px;padding:5px 11px;font-weight:600;cursor:pointer;font-size:13px;}
-.i-delete { display:none; background: #444; color:#fff; border:none; border-radius:8px;padding:5px 11px;font-weight:600;cursor:pointer;font-size:13px; margin-left:7px;}
-.edit-mode .i-edit, .edit-mode .i-delete { display:inline;}
-.lock-ov {display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;}
-.lock {display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-       width:min(330px,95vw);background:var(--cardBG);border-radius:12px;box-shadow:var(--shadow);padding:23px;z-index:201;}
-.lock h3 {margin:0 0 10px;font-weight:700;}
-.input {width:100%;padding:11px 7px;border-radius:7px;background:var(--glass);margin-bottom:12px;border:1px solid #333;}
-.lock-actions {display:flex;justify-content:flex-end;gap:13px;}
-.btn.ok {background:var(--accent);color:#fff;}
-.btn.cancel {background:var(--danger);color:#fff;}
-@media (max-width:900px){ .grid {grid-template-columns:1fr;} }
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif}
+.header{text-align:center;padding:20px 8px 0}
+.h-title{font-size:2em;font-weight:900;color:var(--accent);margin:0 0 10px}
+.toolbar{display:flex;justify-content:center;gap:8px;margin:11px 0 15px;flex-wrap:wrap}
+.btn{border:0;border-radius:8px;padding:8px 19px;font:700 1em/1 Inter,Arial,sans-serif;cursor:pointer;box-shadow:var(--shadow);transition:.2s}
+.btn{background:var(--cardBG);color:var(--accent)}
+.btn.primary{background:var(--accent);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:18px;margin:24px 0;padding:0 6px}
+.card{background:var(--cardBG);border-radius:15px;box-shadow:var(--shadow);padding:16px}
+.logo{font-size:1.3em;background:var(--accent);color:#fff;border-radius:8px;padding:7px 13px;font-weight:900;margin-right:7px}
+.c-name{font-size:1.1em;font-weight:700}
+.join{float:right;background:var(--accent);color:#fff;border-radius:8px;padding:7px 12px;font-weight:600;font-size:.93em;text-decoration:none}
+.sections{margin-top:8px}
+.section{display:flex;justify-content:space-between;align-items:center;margin:8px 0;padding:10px 13px;border-radius:8px;background:var(--glass);font-weight:700;cursor:pointer}
+.section.selected,.section:active{box-shadow:0 0 0 5px var(--modalAccent,#3b82f6)}
+.badge{background:var(--brand);color:#fff;border-radius:10px;padding:3px 10px;font-size:.9em;font-weight:700}
+.all-links{margin:0 8px 18px;padding:14px 4px;border-radius:13px;background:#b58d2b;color:#fff;font-weight:600;text-align:center}
+.all-links a{color:inherit;padding:0 6px;text-decoration:underline dotted}
+#siteViews{text-align:center;margin:0 0 26px;color:#4957af;font:700 1.12em/1 Inter,Arial,sans-serif;letter-spacing:.06em}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100}
+.modal{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:min(360px,99vw);max-height:88vh;background:var(--cardBG);border-radius:12px;box-shadow:var(--shadow);overflow:hidden;z-index:101}
+.m-head{display:flex;justify-content:space-between;align-items:center;padding:14px 10px 10px;background:var(--glass)}
+.m-title{font:700 1.13em/1 Inter,Arial,sans-serif}
+.m-title.accent{color:var(--modalAccent,#3b82f6)}
+.m-back{border:0;border-radius:8px;padding:7px 15px;background:#ef4444;color:#fff;font-weight:600;cursor:pointer}
+.vlist-viewport{max-height:55vh;overflow-y:auto;padding:9px}
+.list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.item{background:var(--glass);border-radius:8px;padding:11px;display:flex;flex-direction:column}
+.i-row{display:flex;justify-content:space-between;align-items:center;gap:9px;margin-bottom:5px}
+.i-meta{display:flex;align-items:center;gap:8px}
+.title{font-weight:700}
+.info{font-style:italic;color:var(--brand);font-size:13px}
+.time{background:var(--modalAccent,#3b82f6);color:#fff;border-radius:13px;padding:5px 12px;font-size:13px;font-weight:600}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-  <div class="header">
-    <div class="h-title">📺 Kannada TV Schedule</div>
-    <div class="toolbar">
-      <button id="modeBtn" class="btn">🌚 Dark</button>
-      <button id="editBtn" class="btn">✏️ Edit</button>
-      <a class="btn primary" href="https://t.me/SB_KAN" target="_blank">SB-KAN @SB_KAN</a>
-    </div>
+<header class="header">
+  <h1 class="h-title">📺 Kannada TV Schedule</h1>
+  <div class="toolbar">
+    <button id="modeBtn" class="btn">🌚 Dark</button>
+    <a class="btn primary" href="https://t.me/SB_KAN" target="_blank">SB-KAN @SB_KAN</a>
   </div>
-  <div class="wrap">
-    <div id="grid" class="grid"></div>
-    <div class="all-links">
-      📋 All Channels Quick Access<br>
-      <a href="https://t.me/+HhovoiYWRFNjY2M1">Zee Kannada</a>
-      <a href="https://t.me/+7dRHkcEf-fgxZjE1">Colors Kannada</a>
-      <a href="https://t.me/+zm5JL22AAx41ZWI1">Star Suvarna</a>
-      <a href="https://t.me/+HmSJBcxckzs4MjI1">Udaya TV</a>
-      <a href="https://t.me/+0KEBs-FBbrVjMjRl">Zee Power</a>
-    </div>
-    <div id="siteViews"></div>
+</header>
+<div class="wrap">
+  <div id="grid" class="grid"></div>
+  <div class="all-links">
+    📋 All Channels Quick Access<br>
+    <a href="https://t.me/+HhovoiYWRFNjY2M1">Zee Kannada</a>
+    <a href="https://t.me/+7dRHkcEf-fgxZjE1">Colors Kannada</a>
+    <a href="https://t.me/+zm5JL22AAx41ZWI1">Star Suvarna</a>
+    <a href="https://t.me/+HmSJBcxckzs4MjI1">Udaya TV</a>
+    <a href="https://t.me/+0KEBs-FBbrVjMjRl">Zee Power</a>
+    <a href="https://t.me/+l5l4SfW3Z_k4OWRl">Weekend Shows</a>
   </div>
-  <!-- Modal, lock, scripts below... -->
-  <div id="overlay" class="overlay"></div>
-  <div id="modal" class="modal">
-    <div class="m-head"><div id="mTitle" class="m-title"></div>
-      <button class="m-back" id="backBtn">← Back</button>
-    </div>
-    <div class="add-row" id="addRow">
-      <button class="add-btn" id="btnAddShow">+ Add Show</button>
-      <button class="add-btn secondary" id="btnAddSection">+ Add Card</button>
-    </div>
-    <div class="vlist-viewport"><ul id="list" class="list"></ul></div>
+  <div id="siteViews"></div>
+</div>
+<div id="overlay" class="overlay"></div>
+<div id="modal" class="modal">
+  <div class="m-head">
+    <div id="mTitle" class="m-title"></div>
+    <button id="backBtn" class="m-back">← Back</button>
   </div>
-  <div id="lockOv" class="lock-ov"></div>
-  <div id="lock" class="lock">
-    <h3>🔐 Enter Admin Password</h3>
-    <input id="pw" class="input" type="password" placeholder="Enter password" />
-    <div class="lock-actions">
-      <button class="btn cancel" id="pwCancel">Cancel</button>
-      <button class="btn ok" id="pwSubmit">Submit</button>
-    </div>
-  </div>
+  <div class="vlist-viewport"><ul id="list" class="list"></ul></div>
+</div>
 <script>
-const sectionAccents = {
-  'zee-afternoon': '#3b82f6',
-  'zee-evening': '#a78bfa',
-  'zee-weekend': '#ef4444',
-  'colors-daily':  '#f97316',
-  'colors-weekend': '#ef4444',
-  'suvarna-daily': '#f59e0b',
-  'udaya-evening': '#60a5fa',
-  'power-lineup': '#10b981'
+const sectionAccents={
+  'zee-afternoon':'#3b82f6','zee-evening':'#a78bfa','zee-weekend':'#ef4444',
+  'colors-daily':'#f97316','colors-weekend':'#ef4444','suvarna-daily':'#f59e0b',
+  'udaya-evening':'#60a5fa','power-lineup':'#10b981','weekend-shows':'#8b5cf6'
 };
-const adminPassword = "SB_KAN_2025";
-const channels = [
-  { name:'Zee Kannada',logo:'📺',link:'https://t.me/+HhovoiYWRFNjY2M1',sections:[
+const channels=[
+  {name:'Zee Kannada',logo:'📺',link:'https://t.me/+HhovoiYWRFNjY2M1',sections:[
     {title:'Afternoon Shows',key:'zee-afternoon'},
     {title:'Evening Shows',key:'zee-evening'},
-    {title:'Weekend Specials',key:'zee-weekend'}
-  ]},
-  { name:'Colors Kannada',logo:'🎨',link:'https://t.me/+7dRHkcEf-fgxZjE1',sections:[
+    {title:'Weekend Specials',key:'zee-weekend'}]},
+  {name:'Colors Kannada',logo:'🎨',link:'https://t.me/+7dRHkcEf-fgxZjE1',sections:[
     {title:'Daily Shows',key:'colors-daily'},
-    {title:'Weekend Shows',key:'colors-weekend'}
-  ]},
-  { name:'Star Suvarna',logo:'⭐',link:'https://t.me/+zm5JL22AAx41ZWI1',sections:[
-    {title:'Daily Programs',key:'suvarna-daily'}
-  ]},
-  { name:'Udaya TV',logo:'🌅',link:'https://t.me/+HmSJBcxckzs4MjI1',sections:[
-    {title:'Evening Lineup',key:'udaya-evening'}
-  ]},
-  { name:'Zee Power',logo:'⚡',link:'https://t.me/+0KEBs-FBbrVjMjRl',sections:[
-    {title:'Power Lineup',key:'power-lineup'}
-  ]}
+    {title:'Weekend Shows',key:'colors-weekend'}]},
+  {name:'Star Suvarna',logo:'⭐',link:'https://t.me/+zm5JL22AAx41ZWI1',sections:[
+    {title:'Daily Programs',key:'suvarna-daily'}]},
+  {name:'Udaya TV',logo:'🌅',link:'https://t.me/+HmSJBcxckzs4MjI1',sections:[
+    {title:'Evening Lineup',key:'udaya-evening'}]},
+  {name:'Zee Power',logo:'⚡',link:'https://t.me/+0KEBs-FBbrVjMjRl',sections:[
+    {title:'Power Lineup',key:'power-lineup'}]},
+  {name:'Weekend Shows',logo:'⏰',link:'https://t.me/+l5l4SfW3Z_k4OWRl',sections:[]}
 ];
-const shows = {
-  'zee-afternoon': [
-    {name:'Maharishi Vaani',time:'8:00 - 9:30 AM',info:''},
-    {name:'Annapoorna',time:'1:00 PM',info:''},
-    {name:'Megha Sandesha',time:'1:30 - 2:00 PM',info:'[Mon - Fri]'},
-    {name:'Hrudaya Geethe',time:'2:00 - 2:30 PM',info:''},
-    {name:'Geetha Govinda',time:'2:30 - 3:00 PM',info:''},
-    {name:'Manethana',time:'3:00 PM',info:''},
-    {name:'Sumangali',time:'3:30 PM',info:''},
-    {name:'Raktha Sambandha',time:'4:00 PM',info:''},
-    {name:'Kalyanamastu',time:'4:30 PM',info:'[Mon - Sun]'},
-    {name:'Sandhaya Raaga',time:'5:00 - 6:00 PM',info:'[Mon - Sun]'}
+const shows={
+  'zee-afternoon':[
+    {name:'Maharishi Vaani',time:'8:00 – 9:30 AM'},
+    {name:'Annapoorna',time:'1:00 PM'},
+    {name:'Megha Sandesha',time:'1:30 – 2:00 PM',info:'[Mon–Fri]'},
+    {name:'Hrudaya Geethe',time:'2:00 – 2:30 PM'},
+    {name:'Geetha Govinda',time:'2:30 – 3:00 PM'},
+    {name:'Manethana',time:'3:00 PM'},
+    {name:'Sumangali',time:'3:30 PM'},
+    {name:'Raktha Sambandha',time:'4:00 PM'},
+    {name:'Kalyanamastu',time:'4:30 PM',info:'[Mon–Sun]'},
+    {name:'Sandhaya Raaga',time:'5:00 – 6:00 PM',info:'[Mon–Sun]'}
   ],
-  'zee-evening': [
-    {name:'Shrirasthu Shubhamasthu',time:'6:00 PM',info:'[Mon - Sun]'},
-    {name:'Puttakkana Makkalu',time:'6:30 PM',info:'[Mon - Sun] Re-Telecast [12.30am]'},
-    {name:'Amruthadhaare',time:'7:00 PM',info:'[Mon - Sun]'},
-    {name:'Annayya',time:'7:30 PM',info:'Re-Telecast [10.30am]'},
-    {name:'Karna',time:'8:00 PM',info:''},
-    {name:'Lakshmi Nivasa',time:'8:00 - 9:00 PM',info:'Re-Telecast [12.00am]'},
-    {name:'Shravani Subramanya',time:'9:00 PM',info:'Re-Telecast [11.00am]'},
-    {name:'Naa Ninna Bidalaare',time:'9:30 PM',info:''},
-    {name:'Brahmagantu',time:'10:00 PM',info:'Re-Telecast [10.00am]'},
-    {name:'Soubhagyavati Bhava',time:'10:30 PM',info:''}
+  'zee-evening':[
+    {name:'Shrirasthu Shubhamasthu',time:'6:00 PM',info:'[Mon–Sun]'},
+    {name:'Puttakkana Makkalu',time:'6:30 PM',info:'[Mon–Sun] Re-telecast 12:30 AM'},
+    {name:'Amruthadhaare',time:'7:00 PM',info:'[Mon–Sun]'},
+    {name:'Annayya',time:'7:30 PM',info:'Re-telecast 10:30 AM'},
+    {name:'Karna',time:'8:00 PM'},
+    {name:'Lakshmi Nivasa',time:'8:00 – 9:00 PM',info:'Re-telecast 12:00 AM'},
+    {name:'Shravani Subramanya',time:'9:00 PM',info:'Re-telecast 11:00 AM'},
+    {name:'Naa Ninna Bidalaare',time:'9:30 PM'},
+    {name:'Brahmagantu',time:'10:00 PM',info:'Re-telecast 10:00 AM'},
+    {name:'Soubhagyavati Bhava',time:'10:30 PM'}
   ],
-  'zee-weekend': [
-    {name:'Mahanati Season 2',time:'7:30 PM',info:''},
-    {name:'Naavu Nammavaru',time:'9:00 PM',info:''}
+  'zee-weekend':[
+    {name:'Mahanati Season 2',time:'7:30 PM'},
+    {name:'Naavu Nammavaru',time:'9:00 PM'}
   ],
-  'colors-daily': [
-    {name:'Maharshi Darshana',time:'7:30 AM',info:'[Mon - Sat]'},
-    {name:'Pavada Purasha',time:'1:00 PM',info:'[Mon - Sat]'},
-    {name:'Dhristi Bottu',time:'6:00 PM',info:'[Mon - Sun]'},
-    {name:'Premakavya',time:'6:30 PM',info:'[Mon - Sun]'},
-    {name:'Bhagyalakshmi',time:'7:00 PM',info:'[Mon - Sun]'},
-    {name:'Muddu Sose',time:'7:30 PM',info:'[Mon - Sun]'},
-    {name:'Ninagaagi',time:'8:00 PM',info:'[Mon - Sun]'},
-    {name:'Bhargavi L.L.B',time:'8:30 PM',info:'[Mon - Sun]'},
-    {name:'Nandagokula',time:'9:00 PM',info:''},
-    {name:'Yajamaana',time:'9:30 PM',info:''},
-    {name:'Ramachari',time:'10:00 PM',info:''},
-    {name:'Vadhu',time:'10:30 PM',info:''}
+  'colors-daily':[
+    {name:'Premakavya',time:'6:30 PM',info:'[Mon–Sun]'},
+    {name:'Dhristi Bottu',time:'6:00 PM',info:'[Mon–Sun]'},
+    {name:'Maharshi Darshana',time:'7:30 AM',info:'[Mon–Sat]'},
+    {name:'Pavada Purasha',time:'1:00 PM',info:'[Mon–Sat]'},
+    {name:'Bhagyalakshmi',time:'7:00 PM',info:'[Mon–Sun]'},
+    {name:'Muddu Sose',time:'7:30 PM',info:'[Mon–Sun]'},
+    {name:'Ninagaagi',time:'8:00 PM',info:'[Mon–Sun]'},
+    {name:'Bhargavi L.L.B',time:'8:30 PM',info:'[Mon–Sun]'},
+    {name:'Nandagokula',time:'9:00 PM'},
+    {name:'Yajamaana',time:'9:30 PM'},
+    {name:'Ramachari',time:'10:00 PM'}
   ],
-  'colors-weekend': [
-    {name:'KwatleKitchen',time:'9:00 PM',info:''}
+  'colors-weekend':[
+    {name:'Kwatle Kitchen',time:'9:00 PM'}
   ],
-  'suvarna-daily': [
-    {name:'Suvarna Sankalp',time:'7:30 AM',info:'[Mon - Sun]'},
-    {name:'Bombat Bhojana',time:'12:00 PM',info:''},
-    {name:'Preethigagi',time:'1:00 PM',info:''},
-    {name:'Anupama - Sarvagunaa Sampanne',time:'1:30 - 2:30 PM',info:''},
-    {name:'Divya Drushti',time:'2:30 - 3:30 PM',info:''},
-    {name:'Suvarna Gruhamantri 2',time:'5:00 PM',info:''},
-    {name:'Gowri Shankara',time:'6:00 PM',info:''},
-    {name:'Sharade',time:'6:30 PM',info:''},
-    {name:'Aase',time:'7:00 - 8:00 PM',info:''},
-    {name:'Ninna Jothe Nanna Kathe',time:'8:00 PM',info:''},
-    {name:'SnehadaKadalalli',time:'8:30 PM',info:''},
-    {name:'Udho Udho Shri Renuka Yellamma',time:'9:00 PM',info:''},
-    {name:'Sree Devi Mahatme',time:'9:30 PM',info:''},
-    {name:'Avanu Mathe Shravani',time:'10:00 PM',info:''}
+  'suvarna-daily':[
+    {name:'Suvarna Sankalp',time:'7:30 AM',info:'[Mon–Sun]'},
+    {name:'Bombat Bhojana',time:'12:00 PM'},
+    {name:'Preethigagi',time:'1:00 PM'},
+    {name:'Anupama – Sarvagunaa Sampanne',time:'1:30 – 2:30 PM'},
+    {name:'Divya Drushti',time:'2:30 – 3:30 PM'},
+    {name:'Suvarna Gruhamantri 2',time:'5:00 PM'},
+    {name:'Gowri Shankara',time:'6:00 PM'},
+    {name:'Sharade',time:'6:30 PM'},
+    {name:'Aase',time:'7:00 – 8:00 PM'},
+    {name:'Ninna Jothe Nanna Kathe',time:'8:00 PM'},
+    {name:'Snehada Kadalalli',time:'8:30 PM'},
+    {name:'Udho Udho Shri Renuka Yellamma',time:'9:00 PM'},
+    {name:'Sree Devi Mahatme',time:'9:30 PM'},
+    {name:'Avanu Mathe Shravani',time:'10:00 PM'}
   ],
-  'udaya-evening': [
-    {name:'Nathicharami',time:'6:00 - 6:30 PM',info:''},
-    {name:'Anna Thangi',time:'6:30 - 7:00 PM',info:''},
-    {name:'SindhuBhairavi',time:'7:00 - 7:30 PM',info:''},
-    {name:'Shambhavi',time:'7:30 - 8:00 PM',info:''},
-    {name:'Suryavamsha',time:'8:00 - 8:30 PM',info:''},
-    {name:'Shanti Nivasa',time:'8:30 - 9:00 PM',info:''},
-    {name:'Myna',time:'9:00 - 9:30 PM',info:''},
-    {name:'Anu Pallavi',time:'9:30 - 10:00 PM',info:''},
-    {name:'Chikkejamani',time:'10:00 - 10:30 PM',info:'[Mon - Sun]'},
-    {name:'Sevanthi',time:'10:30 - 11:00 PM',info:'[Mon - Sun]'}
+  'udaya-evening':[
+    {name:'Nathicharami',time:'6:00 – 6:30 PM'},
+    {name:'Anna Thangi',time:'6:30 – 7:00 PM'},
+    {name:'Sindhu Bhairavi',time:'7:00 – 7:30 PM'},
+    {name:'Shambhavi',time:'7:30 – 8:00 PM'},
+    {name:'Suryavamsha',time:'8:00 – 8:30 PM'},
+    {name:'Shanti Nivasa',time:'8:30 – 9:00 PM'},
+    {name:'Myna',time:'9:00 – 9:30 PM'},
+    {name:'Anu Pallavi',time:'9:30 – 10:00 PM'},
+    {name:'Chikkejamani',time:'10:00 – 10:30 PM',info:'[Mon–Sun]'},
+    {name:'Sevanthi',time:'10:30 – 11:00 PM',info:'[Mon–Sun]'}
   ],
-  'power-lineup': [
-    {name:'Bhavishya Darshana',time:'7:30 AM',info:''},
-    {name:'Rajakumari',time:'7:00 PM',info:''},
-    {name:'Gauri',time:'7:30 PM',info:''},
-    {name:'Jodi Hakki',time:'8:00 PM',info:''},
-    {name:'Shubhasya Sheegram',time:'8:30 PM',info:''},
-    {name:'Halli Power',time:'9:00 PM',info:''}
+  'power-lineup':[
+    {name:'Bhavishya Darshana',time:'7:30 AM'},
+    {name:'Mane Aliya',time:'6:30 PM'},
+    {name:'Rajakumari',time:'7:00 PM'},
+    {name:'Gauri',time:'7:30 PM'},
+    {name:'Jodi Hakki',time:'8:00 PM'},
+    {name:'Shubhasya Sheegram',time:'8:30 PM'},
+    {name:'Halli Power',time:'9:00 PM'}
   ]
 };
-let editMode = false, currentSec = null, dragFrom = null;
 
-function render() {
-  const grid = document.getElementById('grid');
-  grid.innerHTML = '';
-  channels.forEach((ch, idx) => {
-    let html = `<div class="card">
-      <div>
-        <span class="logo">${ch.logo}</span>
-        <span class="c-name">${ch.name}</span>
-        <a class="join" href="${ch.link}" target="_blank">Join</a>
-      </div>
-      <div class="sections">` +
-      ch.sections.map(s=>
-        `<div class="section" data-key="${s.key}" onclick="openSec('${s.key}','${s.title}')">
-          <span>${s.title}</span>
-          <span class="badge">${(shows[s.key]||[]).length}</span>
-        </div>`
-      ).join('') + `</div>
-      <button class="edit-channel" onclick="editChannelLink(${idx});event.stopPropagation();">Edit Channel Link</button>
-    </div>`;
-    grid.innerHTML += html;
-  });
+function render(){
+  const grid=document.getElementById('grid');
+  grid.innerHTML='';
+  channels.forEach(ch=>{
+    grid.insertAdjacentHTML('beforeend',`
+      <div class="card">
+        <div>
+          <span class="logo">${ch.logo}</span>
+          <span class="c-name">${ch.name}</span>
+          <a class="join" href="${ch.link}" target="_blank">Join</a>
+        </div>
+        <div class="sections">
+          ${ch.sections.map(s=>`
+            <div class="section" data-key="${s.key}" onclick="openSec('${s.key}','${s.title}')">
+              <span>${s.title}</span>
+              <span class="badge">${(shows[s.key]||[]).length}</span>
+            </div>`).join('')}
+        </div>
+      </div>`);});
 }
-window.openSec = function(key,title){
-  currentSec=key;
-  let accent = sectionAccents[key] || '#3b82f6';
-  document.querySelectorAll('.section').forEach(sec=>sec.classList.remove('selected'));
-  let secNodes=document.querySelectorAll(`[data-key='${key}']`); secNodes.forEach(n=>n.classList.add('selected'));
-  document.getElementById('modal').style.setProperty('--modalAccent', accent);
+
+function openSec(key,title){
+  document.querySelectorAll('.section').forEach(e=>e.classList.remove('selected'));
+  document.querySelectorAll(`[data-key="${key}"]`).forEach(e=>e.classList.add('selected'));
+  document.getElementById('modal').style.setProperty('--modalAccent',sectionAccents[key]||'#3b82f6');
   document.getElementById('mTitle').textContent=title;
-  document.getElementById('mTitle').className="m-title accent";
-  const list=document.getElementById('list');
-  list.innerHTML='';
-  const data=shows[key]||[];
-  document.getElementById('addRow').style.display=editMode?'flex':'none';
-  data.forEach((show,idx)=>{
-    const li=document.createElement('li');
-    li.className='item';
-    li.draggable=editMode;
-    li.addEventListener('dragstart',(e)=>startDrag(e,idx));
-    li.addEventListener('dragover',(e)=>overDrag(e,idx));
-    li.addEventListener('drop',(e)=>dropDrag(e,idx));
-    li.addEventListener('dragend',endDrag);
-    li.innerHTML=`<div class="i-row">
-      <div class="i-meta"><span class="drag">≡</span><span class="title">${show.name}</span>${show.info?`<span class="info">${show.info}</span>`:''}</div>
-      <span class="time">${show.time}</span>
-      </div>
-      <button class="i-edit" onclick="editShow('${key}',${idx})">Edit</button>
-      <button class="i-delete" onclick="deleteShow('${key}',${idx})">🗑️ Delete</button>`;
-    list.appendChild(li);
-  });
+  document.getElementById('mTitle').className='m-title accent';
+
+  const ul=document.getElementById('list');
+  ul.innerHTML='';
+  (shows[key]||[]).forEach(show=>{
+    ul.insertAdjacentHTML('beforeend',`
+      <li class="item">
+        <div class="i-row">
+          <div class="i-meta">
+            <span class="title">${show.name}</span>
+            ${show.info?`<span class="info">${show.info}</span>`:''}
+          </div>
+          <span class="time">${show.time}</span>
+        </div>
+      </li>`);});
   document.getElementById('overlay').style.display='block';
   document.getElementById('modal').style.display='block';
 }
-window.editShow = function(key,idx){
-  let show=shows[key][idx];
-  let newName=prompt('Edit show name:',show.name); if(newName===null) return;
-  let newTime=prompt('Edit show time:',show.time); if(newTime===null) return;
-  let newInfo=prompt('Edit extra info:',show.info); if(newInfo===null) return;
-  shows[key][idx]={name:newName,time:newTime,info:newInfo};
-  openSec(key, document.getElementById('mTitle').textContent);
-}
-window.deleteShow = function(key, idx) {
-  if(confirm("Delete this show?")) {
-    shows[key].splice(idx, 1);
-    openSec(key, document.getElementById('mTitle').textContent);
-    render();
-  }
-}
-window.editChannelLink=function(idx){
-  const curr=channels[idx].link;
-  const n=prompt('Edit Channel link:',curr);
-  if(n&&n!==curr){channels[idx].link=n;render();}
-}
-function addShow(){
-  if(!currentSec) return;
-  const n=prompt('Show name:'); if(!n) return;
-  const t=prompt('Time:'); if(!t) return;
-  const i=prompt('Extra info (optional):')||'';
-  shows[currentSec]=shows[currentSec]||[];
-  shows[currentSec].push({name:n,time:t,info:i});
-  openSec(currentSec, document.getElementById('mTitle').textContent);
-  render();
-}
-function addSection(){
-  const options=channels.map((c,i)=>`${i+1}. ${c.name}`).join('\n');
-  const sel=prompt(`Add card to which channel?\n${options}\nEnter number:`); 
-  const idx=parseInt(sel)-1;
-  if(isNaN(idx)||idx<0||idx>=channels.length)return;
-  const title=prompt('Card title:'); if(!title)return;
-  const key=prompt('Unique section key:'); if(!key)return;
-  channels[idx].sections.push({title,key});
-  shows[key]=[];
-  render();
-  alert('✅ Card added. Click it to add shows.');
-}
-function startDrag(e,idx){if(!editMode)return;dragFrom=idx;e.currentTarget.classList.add('dragging');}
-function overDrag(e,idx){if(!editMode||dragFrom===null||dragFrom===idx)return;e.preventDefault();}
-function dropDrag(e,toIdx){
-  if(!editMode||dragFrom===null||dragFrom===toIdx)return;
-  const arr=shows[currentSec];const moved=arr.splice(dragFrom,1)[0];
-  arr.splice(toIdx,0,moved);dragFrom=null;openSec(currentSec,document.getElementById('mTitle').textContent);
-}
-function endDrag(e){if(e?.currentTarget)e.currentTarget.classList.remove('dragging');dragFrom=null;}
-document.getElementById('modeBtn').onclick=function(){
+
+document.getElementById('modeBtn').onclick=()=>{
   const html=document.documentElement;
-  const d=html.getAttribute('data-dark')==='true';
-  html.setAttribute('data-dark',!d?'true':'false');
-  document.getElementById('modeBtn').textContent=d?'🌚 Dark':'🌞 Light';
+  const dark=html.getAttribute('data-dark')==='true';
+  html.setAttribute('data-dark',!dark);
+  document.getElementById('modeBtn').textContent=!dark?'🌞 Light':'🌚 Dark';
 };
-document.getElementById('editBtn').onclick=function(){
-  if(editMode){editMode=false;document.body.classList.remove('edit-mode');document.getElementById('editBtn').textContent='✏️ Edit';render();}
-  else{document.getElementById('lockOv').style.display='block';document.getElementById('lock').style.display='block';setTimeout(()=>document.getElementById('pw').focus(),90);}
-};
-document.getElementById('backBtn').onclick=(e)=>{
+document.getElementById('backBtn').onclick=document.getElementById('overlay').onclick=()=>{
   document.getElementById('overlay').style.display='none';
   document.getElementById('modal').style.display='none';
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('selected'));
+  document.querySelectorAll('.section').forEach(e=>e.classList.remove('selected'));
 };
-document.getElementById('overlay').onclick=(e)=>{
-  document.getElementById('overlay').style.display='none';
-  document.getElementById('modal').style.display='none';
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('selected'));
-};
-document.getElementById('btnAddShow').onclick=addShow;
-document.getElementById('btnAddSection').onclick=addSection;
-document.getElementById('pwCancel').onclick=hidePasswordModal;
-document.getElementById('pwSubmit').onclick=checkPassword;
-document.getElementById('lockOv').onclick=hidePasswordModal;
-document.getElementById('pw').onkeypress=function(e){if(e.key==='Enter')checkPassword();};
-function hidePasswordModal(){document.getElementById('lockOv').style.display='none';document.getElementById('lock').style.display='none';document.getElementById('pw').value='';}
-function checkPassword(){
-  if(document.getElementById('pw').value===adminPassword){
-    editMode=true;document.body.classList.add('edit-mode');
-    document.getElementById('editBtn').textContent='🔒 Exit Edit';hidePasswordModal();render();
-    alert('✅ Edit mode enabled!');
-  }else{alert('❌ Wrong password!');document.getElementById('pw').value='';}
-}
 render();
-// GLOBAL VIEWS COUNTER (CountAPI) -- this runs once page loads
+
+// global view counter
 fetch('https://api.countapi.xyz/hit/kndtv/v1')
- .then(res=>res.json())
- .then(data=>{
-   document.getElementById('siteViews').textContent = data.value + ' views';
- });
+  .then(r=>r.json())
+  .then(d=>{document.getElementById('siteViews').textContent=`${d.value} views`;});
 </script>
 </body>
 </html>
