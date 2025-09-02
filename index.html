@@ -4,7 +4,6 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Kannada TV Schedule – SB-KAN</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
 <style>
 :root{
   --bg:#f8fafc;--cardBG:#fff;--text:#212b36;--accent:#3b82f6;--brand:#8b5cf6;
@@ -75,6 +74,7 @@ body{margin:0;min-height:100vh;background:linear-gradient(135deg,var(--bg) 0%,va
 .loading{text-align:center;padding:50px;color:var(--brand);font-size:1.2em}
 .error-msg{background:#fee;color:#c53030;padding:10px;border-radius:8px;margin:10px 0;text-align:center;font-size:14px}
 .success-msg{background:#f0fff4;color:#38a169;padding:10px;border-radius:8px;margin:10px 0;text-align:center;font-size:14px}
+.db-status{text-align:center;margin:10px 0;padding:8px;border-radius:8px;font-size:12px;background:rgba(34,197,94,0.1);color:#059669}
 @media(max-width:768px){
   .grid{grid-template-columns:1fr;padding:0 10px}
   .modal{width:95vw}
@@ -93,6 +93,7 @@ body{margin:0;min-height:100vh;background:linear-gradient(135deg,var(--bg) 0%,va
   </div>
 </header>
 <div class="wrap">
+  <div class="db-status" id="dbStatus">🌐 Connecting to Database...</div>
   <div id="loadingMsg" class="loading">🔄 Loading TV Schedule...</div>
   <div id="grid" class="grid" style="display:none"></div>
   <div class="all-links">
@@ -146,20 +147,227 @@ body{margin:0;min-height:100vh;background:linear-gradient(135deg,var(--bg) 0%,va
 </div>
 
 <script>
-// Database variables
-let db;
-let SQL;
-let isInitialized = false;
+// Simple in-memory storage that persists using a fallback method
+class ShowStorage {
+  constructor() {
+    this.shows = {};
+    this.isOnline = false;
+    this.loadInitialData();
+  }
 
-// Section color mapping
-const sectionAccents={
-  'zee-afternoon':'#3b82f6','zee-evening':'#a78bfa','zee-weekend':'#ef4444',
-  'colors-daily':'#f97316','colors-weekend':'#ef4444','suvarna-daily':'#f59e0b',
-  'udaya-evening':'#60a5fa','power-lineup':'#10b981','weekend-shows':'#8b5cf6'
-};
+  loadInitialData() {
+    // Initial shows data
+    const initialShows = {
+      'zee-afternoon': [
+        {id: 1, name: 'Maharishi Vaani', time: '8:00 – 9:30 AM', info: ''},
+        {id: 2, name: 'Annapoorna', time: '1:00 PM', info: ''},
+        {id: 3, name: 'Megha Sandesha', time: '1:30 – 2:00 PM', info: '[Mon–Fri]'},
+        {id: 4, name: 'Hrudaya Geethe', time: '2:00 – 2:30 PM', info: ''},
+        {id: 5, name: 'Geetha Govinda', time: '2:30 – 3:00 PM', info: ''},
+        {id: 6, name: 'Manethana', time: '3:00 PM', info: ''},
+        {id: 7, name: 'Sumangali', time: '3:30 PM', info: ''},
+        {id: 8, name: 'Raktha Sambandha', time: '4:00 PM', info: ''},
+        {id: 9, name: 'Kalyanamastu', time: '4:30 PM', info: '[Mon–Sun]'},
+        {id: 10, name: 'Sandhaya Raaga', time: '5:00 – 6:00 PM', info: '[Mon–Sun]'}
+      ],
+      'zee-evening': [
+        {id: 11, name: 'Shrirasthu Shubhamasthu', time: '6:00 PM', info: '[Mon–Sun]'},
+        {id: 12, name: 'Puttakkana Makkalu', time: '6:30 PM', info: '[Mon–Sun] Re-telecast 12:30 AM'},
+        {id: 13, name: 'Amruthadhaare', time: '7:00 PM', info: '[Mon–Sun]'},
+        {id: 14, name: 'Annayya', time: '7:30 PM', info: 'Re-telecast 10:30 AM'},
+        {id: 15, name: 'Karna', time: '8:00 PM', info: ''},
+        {id: 16, name: 'Lakshmi Nivasa', time: '8:30 PM', info: ''},
+        {id: 17, name: 'Shravani Subramanya', time: '9:00 PM', info: 'Re-telecast 11:00 AM'},
+        {id: 18, name: 'Naa Ninna Bidalaare', time: '9:30 PM', info: ''},
+        {id: 19, name: 'Brahmagantu', time: '10:00 PM', info: 'Re-telecast 10:00 AM'},
+        {id: 20, name: 'Soubhagyavati Bhava', time: '10:30 PM', info: ''}
+      ],
+      'zee-weekend': [
+        {id: 21, name: 'Mahanati Season 2', time: '7:30 PM', info: ''},
+        {id: 22, name: 'Naavu Nammavaru', time: '9:00 PM', info: ''}
+      ],
+      'colors-daily': [
+        {id: 23, name: 'Maharshi Darshana', time: '7:30 AM', info: '[Mon - Sat]'},
+        {id: 24, name: 'Pavada Purasha', time: '1:00 PM', info: '[Mon - Sat]'},
+        {id: 25, name: 'Premakavya', time: '6:00 PM', info: '[Mon - Sun]'},
+        {id: 26, name: 'Dhristi Bottu', time: '6:30 PM', info: '[Mon - Sun]'},
+        {id: 27, name: 'Bhagyalakshmi', time: '7:00 PM', info: '[Mon - Sun]'},
+        {id: 28, name: 'Muddu Sose', time: '7:30 PM', info: '[Mon - Sun]'},
+        {id: 29, name: 'Ninagaagi', time: '8:00 PM', info: '[Mon - Sun]'},
+        {id: 30, name: 'Bhargavi L.L.B', time: '8:30 PM', info: '[Mon - Sun]'},
+        {id: 31, name: 'Nandagokula', time: '9:00 PM', info: ''},
+        {id: 32, name: 'Yajamaana', time: '9:30 PM', info: ''},
+        {id: 33, name: 'Ramachari', time: '10:00 PM', info: ''}
+      ],
+      'colors-weekend': [
+        {id: 34, name: 'Kwatle Kitchen', time: '9:00 PM', info: ''}
+      ],
+      'suvarna-daily': [
+        {id: 35, name: 'Suvarna Sankalp', time: '7:30 AM', info: '[Mon–Sun]'},
+        {id: 36, name: 'Bombat Bhojana', time: '12:00 PM', info: ''},
+        {id: 37, name: 'Preethigagi', time: '1:00 PM', info: ''},
+        {id: 38, name: 'Anupama – Sarvagunaa Sampanne', time: '1:30 – 2:30 PM', info: ''},
+        {id: 39, name: 'Divya Drushti', time: '2:30 – 3:30 PM', info: ''},
+        {id: 40, name: 'Suvarna Gruhamantri 2', time: '5:00 PM', info: ''},
+        {id: 41, name: 'Gowri Shankara', time: '6:00 PM', info: ''},
+        {id: 42, name: 'Sharade', time: '6:30 PM', info: ''},
+        {id: 43, name: 'Aase', time: '7:00 – 8:00 PM', info: ''},
+        {id: 44, name: 'Ninna Jothe Nanna Kathe', time: '8:00 PM', info: ''},
+        {id: 45, name: 'Snehada Kadalalli', time: '8:30 PM', info: ''},
+        {id: 46, name: 'Udho Udho Shri Renuka Yellamma', time: '9:00 PM', info: ''},
+        {id: 47, name: 'Sree Devi Mahatme', time: '9:30 PM', info: ''},
+        {id: 48, name: 'Avanu Mathe Shravani', time: '10:00 PM', info: ''}
+      ],
+      'udaya-evening': [
+        {id: 49, name: 'Nathicharami', time: '6:00 – 6:30 PM', info: ''},
+        {id: 50, name: 'Anna Thangi', time: '6:30 – 7:00 PM', info: ''},
+        {id: 51, name: 'Sindhu Bhairavi', time: '7:00 – 7:30 PM', info: ''},
+        {id: 52, name: 'Shambhavi', time: '7:30 – 8:00 PM', info: ''},
+        {id: 53, name: 'Suryavamsha', time: '8:00 – 8:30 PM', info: ''},
+        {id: 54, name: 'Shanti Nivasa', time: '8:30 – 9:00 PM', info: ''},
+        {id: 55, name: 'Myna', time: '9:00 – 9:30 PM', info: ''},
+        {id: 56, name: 'Anu Pallavi', time: '9:30 – 10:00 PM', info: ''},
+        {id: 57, name: 'Chikkejamani', time: '10:00 – 10:30 PM', info: '[Mon–Sun]'},
+        {id: 58, name: 'Sevanthi', time: '10:30 – 11:00 PM', info: '[Mon–Sun]'}
+      ],
+      'power-lineup': [
+        {id: 59, name: 'Bhavishya Darshana', time: '7:30 AM', info: ''},
+        {id: 60, name: 'Mane Aliya', time: '6:30 PM', info: ''},
+        {id: 61, name: 'Rajakumari', time: '7:00 PM', info: ''},
+        {id: 62, name: 'Gowri', time: '7:30 PM', info: ''},
+        {id: 63, name: 'Jodi Hakki', time: '8:00 PM', info: ''},
+        {id: 64, name: 'Shubhasya Sheegram', time: '8:30 PM', info: ''},
+        {id: 65, name: 'Halli Power', time: '9:00 PM', info: ''}
+      ]
+    };
 
-// Channels configuration
-const channels=[
+    this.shows = initialShows;
+    this.nextId = 66;
+
+    // Try to load from sessionStorage (works better than localStorage)
+    try {
+      const saved = sessionStorage.getItem('kannadaTVShows');
+      if (saved) {
+        const data = JSON.parse(saved);
+        this.shows = data.shows || initialShows;
+        this.nextId = data.nextId || 66;
+        console.log('✅ Data loaded from sessionStorage');
+      }
+    } catch (error) {
+      console.warn('⚠️ SessionStorage not available, using initial data');
+    }
+
+    this.updateDBStatus('💾 Using Session Storage');
+  }
+
+  updateDBStatus(message) {
+    const status = document.getElementById('dbStatus');
+    if (status) {
+      status.textContent = message;
+    }
+  }
+
+  save() {
+    try {
+      const data = {
+        shows: this.shows,
+        nextId: this.nextId
+      };
+      sessionStorage.setItem('kannadaTVShows', JSON.stringify(data));
+      console.log('✅ Data saved to sessionStorage');
+      return true;
+    } catch (error) {
+      console.warn('⚠️ Could not save to sessionStorage:', error);
+      return false;
+    }
+  }
+
+  getShows(sectionKey) {
+    return this.shows[sectionKey] || [];
+  }
+
+  addShow(sectionKey, name, time, info) {
+    try {
+      if (!this.shows[sectionKey]) {
+        this.shows[sectionKey] = [];
+      }
+      
+      const newShow = {
+        id: this.nextId++,
+        name: name.trim(),
+        time: time.trim(),
+        info: (info || '').trim()
+      };
+      
+      this.shows[sectionKey].push(newShow);
+      this.save();
+      
+      return { success: true, message: '✅ Show added successfully!' };
+    } catch (error) {
+      console.error('Error adding show:', error);
+      return { success: false, message: `❌ Error: ${error.message}` };
+    }
+  }
+
+  updateShow(id, name, time, info) {
+    try {
+      for (let sectionKey in this.shows) {
+        const showIndex = this.shows[sectionKey].findIndex(show => show.id == id);
+        if (showIndex !== -1) {
+          this.shows[sectionKey][showIndex] = {
+            ...this.shows[sectionKey][showIndex],
+            name: name.trim(),
+            time: time.trim(),
+            info: (info || '').trim()
+          };
+          this.save();
+          return { success: true, message: '✅ Show updated successfully!' };
+        }
+      }
+      throw new Error('Show not found');
+    } catch (error) {
+      console.error('Error updating show:', error);
+      return { success: false, message: `❌ Error: ${error.message}` };
+    }
+  }
+
+  deleteShow(id) {
+    try {
+      for (let sectionKey in this.shows) {
+        const showIndex = this.shows[sectionKey].findIndex(show => show.id == id);
+        if (showIndex !== -1) {
+          this.shows[sectionKey].splice(showIndex, 1);
+          this.save();
+          return { success: true, message: '✅ Show deleted successfully!' };
+        }
+      }
+      throw new Error('Show not found');
+    } catch (error) {
+      console.error('Error deleting show:', error);
+      return { success: false, message: `❌ Error: ${error.message}` };
+    }
+  }
+}
+
+// Initialize storage
+const storage = new ShowStorage();
+
+// Status message functions
+function showStatusMsg(message, type = 'success') {
+  const statusDiv = document.getElementById('statusMsg');
+  if (statusDiv) {
+    statusDiv.className = type === 'success' ? 'success-msg' : 'error-msg';
+    statusDiv.textContent = message;
+    statusDiv.style.display = 'block';
+    
+    setTimeout(() => {
+      statusDiv.style.display = 'none';
+    }, 3000);
+  }
+}
+
+// Channel configuration
+const channels = [
   {name:'Zee Kannada',logo:'📺',link:'https://t.me/+HhovoiYWRFNjY2M1',sections:[
     {title:'Afternoon Shows',key:'zee-afternoon'},
     {title:'Evening Shows',key:'zee-evening'},
@@ -172,367 +380,19 @@ const channels=[
   {name:'Udaya TV',logo:'🌅',link:'https://t.me/+HmSJBcxckzs4MjI1',sections:[
     {title:'Evening Lineup',key:'udaya-evening'}]},
   {name:'Zee Power',logo:'⚡',link:'https://t.me/+0KEBs-FBbrVjMjRl',sections:[
-    {title:'Power Lineup',key:'power-lineup'}]},
-  {name:'Weekend Shows',logo:'🎉',link:'https://t.me/+l5l4SfW3Z_k4OWRl',sections:[
-    {title:'Weekend Collection',key:'weekend-shows'}]}
+    {title:'Power Lineup',key:'power-lineup'}]}
 ];
 
-// Initial shows data for migration
-const initialShows={
-  'zee-afternoon':[
-    {name:'Maharishi Vaani',time:'8:00 – 9:30 AM'},
-    {name:'Annapoorna',time:'1:00 PM'},
-    {name:'Megha Sandesha',time:'1:30 – 2:00 PM',info:'[Mon–Fri]'},
-    {name:'Hrudaya Geethe',time:'2:00 – 2:30 PM'},
-    {name:'Geetha Govinda',time:'2:30 – 3:00 PM'},
-    {name:'Manethana',time:'3:00 PM'},
-    {name:'Sumangali',time:'3:30 PM'},
-    {name:'Raktha Sambandha',time:'4:00 PM'},
-    {name:'Kalyanamastu',time:'4:30 PM',info:'[Mon–Sun]'},
-    {name:'Sandhaya Raaga',time:'5:00 – 6:00 PM',info:'[Mon–Sun]'}
-  ],
-  'zee-evening':[
-    {name:'Shrirasthu Shubhamasthu',time:'6:00 PM',info:'[Mon–Sun]'},
-    {name:'Puttakkana Makkalu',time:'6:30 PM',info:'[Mon–Sun] Re-telecast 12:30 AM'},
-    {name:'Amruthadhaare',time:'7:00 PM',info:'[Mon–Sun]'},
-    {name:'Annayya',time:'7:30 PM',info:'Re-telecast 10:30 AM'},
-    {name:'Karna',time:'8:00 PM'},
-    {name:'Lakshmi Nivasa',time:'8:30 PM'},
-    {name:'Shravani Subramanya',time:'9:00 PM',info:'Re-telecast 11:00 AM'},
-    {name:'Naa Ninna Bidalaare',time:'9:30 PM'},
-    {name:'Brahmagantu',time:'10:00 PM',info:'Re-telecast 10:00 AM'},
-    {name:'Soubhagyavati Bhava',time:'10:30 PM'}
-  ],
-  'zee-weekend':[
-    {name:'Mahanati Season 2',time:'7:30 PM'},
-    {name:'Naavu Nammavaru',time:'9:00 PM'}
-  ],
-  'colors-daily':[
-    {name:'Maharshi Darshana', time:'7:30 AM', info:'[Mon - Sat]'},
-    {name:'Pavada Purasha', time:'1:00 PM', info:'[Mon - Sat]'},
-    {name:'Premakavya', time:'6:00 PM', info:'[Mon - Sun]'},
-    {name:'Dhristi Bottu', time:'6:30 PM', info:'[Mon - Sun]'},
-    {name:'Bhagyalakshmi', time:'7:00 PM', info:'[Mon - Sun]'},
-    {name:'Muddu Sose', time:'7:30 PM', info:'[Mon - Sun]'},
-    {name:'Ninagaagi', time:'8:00 PM', info:'[Mon - Sun]'},
-    {name:'Bhargavi L.L.B', time:'8:30 PM', info:'[Mon - Sun]'},
-    {name:'Nandagokula', time:'9:00 PM'},
-    {name:'Yajamaana', time:'9:30 PM'},
-    {name:'Ramachari', time:'10:00 PM'}
-  ],
-  'colors-weekend':[
-    {name:'Kwatle Kitchen',time:'9:00 PM'}
-  ],
-  'suvarna-daily':[
-    {name:'Suvarna Sankalp',time:'7:30 AM',info:'[Mon–Sun]'},
-    {name:'Bombat Bhojana',time:'12:00 PM'},
-    {name:'Preethigagi',time:'1:00 PM'},
-    {name:'Anupama – Sarvagunaa Sampanne',time:'1:30 – 2:30 PM'},
-    {name:'Divya Drushti',time:'2:30 – 3:30 PM'},
-    {name:'Suvarna Gruhamantri 2',time:'5:00 PM'},
-    {name:'Gowri Shankara',time:'6:00 PM'},
-    {name:'Sharade',time:'6:30 PM'},
-    {name:'Aase',time:'7:00 – 8:00 PM'},
-    {name:'Ninna Jothe Nanna Kathe',time:'8:00 PM'},
-    {name:'Snehada Kadalalli',time:'8:30 PM'},
-    {name:'Udho Udho Shri Renuka Yellamma',time:'9:00 PM'},
-    {name:'Sree Devi Mahatme',time:'9:30 PM'},
-    {name:'Avanu Mathe Shravani',time:'10:00 PM'}
-  ],
-  'udaya-evening':[
-    {name:'Nathicharami',time:'6:00 – 6:30 PM'},
-    {name:'Anna Thangi',time:'6:30 – 7:00 PM'},
-    {name:'Sindhu Bhairavi',time:'7:00 – 7:30 PM'},
-    {name:'Shambhavi',time:'7:30 – 8:00 PM'},
-    {name:'Suryavamsha',time:'8:00 – 8:30 PM'},
-    {name:'Shanti Nivasa',time:'8:30 – 9:00 PM'},
-    {name:'Myna',time:'9:00 – 9:30 PM'},
-    {name:'Anu Pallavi',time:'9:30 – 10:00 PM'},
-    {name:'Chikkejamani',time:'10:00 – 10:30 PM',info:'[Mon–Sun]'},
-    {name:'Sevanthi',time:'10:30 – 11:00 PM',info:'[Mon–Sun]'}
-  ],
-  'power-lineup':[
-    {name:'Bhavishya Darshana',time:'7:30 AM'},
-    {name:'Mane Aliya',time:'6:30 PM'},
-    {name:'Rajakumari',time:'7:00 PM'},
-    {name:'Gowri',time:'7:30 PM'},
-    {name:'Jodi Hakki',time:'8:00 PM'},
-    {name:'Shubhasya Sheegram',time:'8:30 PM'},
-    {name:'Halli Power',time:'9:00 PM'}
-  ],
-  'weekend-shows':[
-    {name:'Weekend Special Movies',time:'All Day',info:'Various Times'}
-  ]
+const sectionAccents = {
+  'zee-afternoon':'#3b82f6','zee-evening':'#a78bfa','zee-weekend':'#ef4444',
+  'colors-daily':'#f97316','colors-weekend':'#ef4444','suvarna-daily':'#f59e0b',
+  'udaya-evening':'#60a5fa','power-lineup':'#10b981','weekend-shows':'#8b5cf6'
 };
 
-let shows = {};
-
-// Status message functions
-function showStatusMsg(message, type = 'success') {
-  const statusDiv = document.getElementById('statusMsg');
-  statusDiv.className = type === 'success' ? 'success-msg' : 'error-msg';
-  statusDiv.textContent = message;
-  statusDiv.style.display = 'block';
-  
-  setTimeout(() => {
-    statusDiv.style.display = 'none';
-  }, 3000);
-}
-
-// Check localStorage availability and quota
-function checkLocalStorageQuota() {
-  try {
-    const test = 'test';
-    localStorage.setItem('test', test);
-    localStorage.removeItem('test');
-    return true;
-  } catch (error) {
-    console.warn('localStorage not available:', error);
-    return false;
-  }
-}
-
-// Database functions with improved error handling
-async function initDatabase() {
-  try {
-    console.log('🔄 Initializing database...');
-    SQL = await initSqlJs({
-      locateFile: file => `https://sql.js.org/dist/${file}`
-    });
-
-    if (!checkLocalStorageQuota()) {
-      throw new Error('localStorage not available');
-    }
-
-    const savedDb = localStorage.getItem('kannadaTVDB_v3');
-    
-    if (savedDb) {
-      try {
-        console.log('📂 Loading saved database...');
-        const data = new Uint8Array(JSON.parse(savedDb));
-        db = new SQL.Database(data);
-      } catch (error) {
-        console.warn('⚠️ Error loading saved database, creating new:', error);
-        db = new SQL.Database();
-        createTables();
-        migrateExistingData();
-      }
-    } else {
-      console.log('🆕 Creating new database...');
-      db = new SQL.Database();
-      createTables();
-      migrateExistingData();
-    }
-    
-    updateShowsFromDB();
-    isInitialized = true;
-    console.log('✅ Database initialized successfully');
-    
-    // Hide loading and show content
-    document.getElementById('loadingMsg').style.display = 'none';
-    document.getElementById('grid').style.display = 'grid';
-    
-  } catch (error) {
-    console.error('❌ Database initialization failed:', error);
-    // Fallback to original shows data
-    shows = {...initialShows};
-    isInitialized = true;
-    document.getElementById('loadingMsg').style.display = 'none';
-    document.getElementById('grid').style.display = 'grid';
-    render();
-  }
-}
-
-function createTables() {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS shows (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      section_key TEXT NOT NULL,
-      name TEXT NOT NULL,
-      time_slot TEXT NOT NULL,
-      info TEXT DEFAULT ''
-    );
-  `);
-}
-
-function migrateExistingData() {
-  console.log('📋 Migrating initial data...');
-  Object.keys(initialShows).forEach(sectionKey => {
-    initialShows[sectionKey].forEach(show => {
-      db.run(
-        'INSERT INTO shows (section_key, name, time_slot, info) VALUES (?, ?, ?, ?)',
-        [sectionKey, show.name, show.time, show.info || '']
-      );
-    });
-  });
-  saveDatabase();
-}
-
-function addShow(sectionKey, name, timeSlot, info = '') {
-  try {
-    if (!db) {
-      throw new Error('Database not initialized');
-    }
-    
-    // Validate inputs
-    if (!name.trim() || !timeSlot.trim()) {
-      throw new Error('Name and time are required');
-    }
-    
-    db.run(
-      'INSERT INTO shows (section_key, name, time_slot, info) VALUES (?, ?, ?, ?)',
-      [sectionKey, name.trim(), timeSlot.trim(), info.trim()]
-    );
-    
-    if (!saveDatabase()) {
-      throw new Error('Failed to save to storage');
-    }
-    
-    updateShowsFromDB();
-    return { success: true, message: '✅ Show added successfully!' };
-  } catch (error) {
-    console.error('Error adding show:', error);
-    return { success: false, message: `❌ Error: ${error.message}` };
-  }
-}
-
-function updateShow(id, name, timeSlot, info) {
-  try {
-    if (!db) {
-      throw new Error('Database not initialized');
-    }
-    
-    // Validate inputs
-    if (!name.trim() || !timeSlot.trim()) {
-      throw new Error('Name and time are required');
-    }
-    
-    db.run(
-      'UPDATE shows SET name = ?, time_slot = ?, info = ? WHERE id = ?',
-      [name.trim(), timeSlot.trim(), info.trim(), id]
-    );
-    
-    if (!saveDatabase()) {
-      throw new Error('Failed to save to storage');
-    }
-    
-    updateShowsFromDB();
-    return { success: true, message: '✅ Show updated successfully!' };
-  } catch (error) {
-    console.error('Error updating show:', error);
-    return { success: false, message: `❌ Error: ${error.message}` };
-  }
-}
-
-function deleteShow(id) {
-  try {
-    if (!db) {
-      throw new Error('Database not initialized');
-    }
-    
-    db.run('DELETE FROM shows WHERE id = ?', [id]);
-    
-    if (!saveDatabase()) {
-      throw new Error('Failed to save to storage');
-    }
-    
-    updateShowsFromDB();
-    return { success: true, message: '✅ Show deleted successfully!' };
-  } catch (error) {
-    console.error('Error deleting show:', error);
-    return { success: false, message: `❌ Error: ${error.message}` };
-  }
-}
-
-function getShowsBySection(sectionKey) {
-  try {
-    if (!db) return [];
-    
-    const stmt = db.prepare('SELECT * FROM shows WHERE section_key = ? ORDER BY time_slot');
-    const results = [];
-    stmt.bind([sectionKey]);
-    while (stmt.step()) {
-      results.push(stmt.getAsObject());
-    }
-    stmt.free();
-    return results;
-  } catch (error) {
-    console.error('Error getting shows:', error);
-    return [];
-  }
-}
-
-function updateShowsFromDB() {
-  try {
-    // Initialize all sections
-    Object.keys(initialShows).forEach(sectionKey => {
-      shows[sectionKey] = [];
-    });
-    
-    // Add weekend-shows if missing
-    if (!shows['weekend-shows']) {
-      shows['weekend-shows'] = [];
-    }
-    
-    // Update from database
-    Object.keys(shows).forEach(sectionKey => {
-      const dbShows = getShowsBySection(sectionKey);
-      shows[sectionKey] = dbShows.map(show => ({
-        name: show.name,
-        time: show.time_slot,
-        info: show.info
-      }));
-    });
-    
-    render();
-  } catch (error) {
-    console.error('Error updating shows from DB:', error);
-  }
-}
-
-function saveDatabase() {
-  try {
-    if (!db) return false;
-    
-    // Check if localStorage is available
-    if (!checkLocalStorageQuota()) {
-      console.warn('localStorage quota exceeded or blocked');
-      return false;
-    }
-    
-    const data = db.export();
-    const dataArray = Array.from(data);
-    
-    // Check data size (localStorage limit is typically 5MB)
-    const dataSize = JSON.stringify(dataArray).length;
-    const maxSize = 4 * 1024 * 1024; // 4MB limit to be safe
-    
-    if (dataSize > maxSize) {
-      console.warn('Database too large for localStorage');
-      return false;
-    }
-    
-    localStorage.setItem('kannadaTVDB_v3', JSON.stringify(dataArray));
-    return true;
-    
-  } catch (error) {
-    console.error('Error saving database:', error);
-    
-    // Try to clear some space and retry once
-    try {
-      localStorage.removeItem('kannadaTVDB_v2');
-      localStorage.removeItem('kannadaTVDB');
-      localStorage.setItem('kannadaTVDB_v3', JSON.stringify(Array.from(db.export())));
-      return true;
-    } catch (retryError) {
-      console.error('Retry save failed:', retryError);
-      return false;
-    }
-  }
-}
+let editingShowId = null;
 
 // Render functions
-function render(){
+function render() {
   const grid = document.getElementById('grid');
   if (!grid) return;
   
@@ -540,7 +400,8 @@ function render(){
   
   channels.forEach(ch => {
     const sectionsHTML = ch.sections.map(s => {
-      const count = (shows[s.key] || []).length;
+      const shows = storage.getShows(s.key);
+      const count = shows.length;
       return `
         <div class="section" data-key="${s.key}" onclick="openSec('${s.key}','${s.title}')">
           <span>📑 ${s.title}</span>
@@ -562,22 +423,22 @@ function render(){
   });
 }
 
-function openSec(key,title){
+function openSec(key, title) {
   document.querySelectorAll('.section').forEach(e=>e.classList.remove('selected'));
   document.querySelectorAll(`[data-key="${key}"]`).forEach(e=>e.classList.add('selected'));
   document.getElementById('modal').style.setProperty('--modalAccent',sectionAccents[key]||'#3b82f6');
   document.getElementById('mTitle').textContent = '📺 ' + title;
   document.getElementById('mTitle').className='m-title accent';
 
-  const ul=document.getElementById('list');
-  ul.innerHTML='';
+  const ul = document.getElementById('list');
+  ul.innerHTML = '';
   
-  const sectionShows = shows[key] || [];
+  const sectionShows = storage.getShows(key);
   
   if (sectionShows.length === 0) {
     ul.innerHTML = '<li class="item"><div class="i-row"><div class="i-meta"><span class="title">🎬 No shows added yet</span><span class="info">Use Admin panel to add shows</span></div></div></li>';
   } else {
-    sectionShows.forEach((show, index) => {
+    sectionShows.forEach((show) => {
       ul.insertAdjacentHTML('beforeend',`
         <li class="item">
           <div class="i-row">
@@ -610,24 +471,22 @@ function showAdminPanel() {
 function loadAdminShows() {
   const sectionKey = document.getElementById('sectionSelect').value;
   const showsList = document.getElementById('adminShowsList');
-  const dbShows = getShowsBySection(sectionKey);
+  const sectionShows = storage.getShows(sectionKey);
   
-  showsList.innerHTML = `<h4>📋 Current Shows (${dbShows.length}):</h4>` + 
-    dbShows.map(show => `
+  showsList.innerHTML = `<h4>📋 Current Shows (${sectionShows.length}):</h4>` + 
+    sectionShows.map(show => `
       <div class="admin-show-item">
         <div>
           <strong>🎭 ${show.name}</strong><br>
-          <small>⏰ ${show.time_slot} ${show.info ? '• ' + show.info : ''}</small>
+          <small>⏰ ${show.time} ${show.info ? '• ' + show.info : ''}</small>
         </div>
         <div class="admin-show-buttons">
-          <button class="edit-btn" onclick="editShow(${show.id}, '${show.name.replace(/'/g, "\\'")}', '${show.time_slot.replace(/'/g, "\\'")}', '${(show.info || '').replace(/'/g, "\\'")}')">✏️ Edit</button>
+          <button class="edit-btn" onclick="editShow(${show.id}, '${show.name.replace(/'/g, "\\'")}', '${show.time.replace(/'/g, "\\'")}', '${(show.info || '').replace(/'/g, "\\'")}')">✏️ Edit</button>
           <button class="delete-btn" onclick="deleteShowConfirm(${show.id})">🗑️ Delete</button>
         </div>
       </div>
     `).join('');
 }
-
-let editingShowId = null;
 
 function editShow(id, name, timeSlot, info) {
   document.getElementById('showName').value = name;
@@ -639,9 +498,10 @@ function editShow(id, name, timeSlot, info) {
 
 function deleteShowConfirm(id) {
   if (confirm('🗑️ Are you sure you want to delete this show?')) {
-    const result = deleteShow(id);
+    const result = storage.deleteShow(id);
     showStatusMsg(result.message, result.success ? 'success' : 'error');
     if (result.success) {
+      render();
       loadAdminShows();
     }
   }
@@ -657,22 +517,23 @@ function handleAddShow(e) {
   let result;
   
   if (editingShowId) {
-    result = updateShow(editingShowId, name, timeSlot, info);
+    result = storage.updateShow(editingShowId, name, timeSlot, info);
     editingShowId = null;
     document.getElementById('submitBtn').textContent = '➕ Add Show';
   } else {
-    result = addShow(sectionKey, name, timeSlot, info);
+    result = storage.addShow(sectionKey, name, timeSlot, info);
   }
   
   showStatusMsg(result.message, result.success ? 'success' : 'error');
   
   if (result.success) {
     document.getElementById('showForm').reset();
+    render();
     loadAdminShows();
   }
 }
 
-// Theme toggle function
+// Theme functions
 function toggleTheme() {
   const html = document.documentElement;
   const isDark = html.getAttribute('data-dark') === 'true';
@@ -681,18 +542,16 @@ function toggleTheme() {
   html.setAttribute('data-dark', newTheme);
   document.getElementById('modeBtn').textContent = newTheme ? '☀️ Light' : '🌙 Dark';
   
-  // Save theme preference
   try {
-    localStorage.setItem('theme', newTheme ? 'dark' : 'light');
+    sessionStorage.setItem('theme', newTheme ? 'dark' : 'light');
   } catch (error) {
     console.warn('Could not save theme preference:', error);
   }
 }
 
-// Load saved theme
 function loadTheme() {
   try {
-    const savedTheme = localStorage.getItem('theme') || 'light';
+    const savedTheme = sessionStorage.getItem('theme') || 'light';
     const html = document.documentElement;
     
     if (savedTheme === 'dark') {
@@ -727,7 +586,9 @@ document.getElementById('adminBackBtn').onclick = () => {
   editingShowId = null;
   document.getElementById('submitBtn').textContent = '➕ Add Show';
   document.getElementById('showForm').reset();
-  document.getElementById('statusMsg').style.display = 'none';
+  if (document.getElementById('statusMsg')) {
+    document.getElementById('statusMsg').style.display = 'none';
+  }
 };
 
 document.getElementById('showForm').onsubmit = handleAddShow;
@@ -737,13 +598,20 @@ document.getElementById('sectionSelect').onchange = () => {
   editingShowId = null;
   document.getElementById('submitBtn').textContent = '➕ Add Show';
   document.getElementById('showForm').reset();
-  document.getElementById('statusMsg').style.display = 'none';
+  if (document.getElementById('statusMsg')) {
+    document.getElementById('statusMsg').style.display = 'none';
+  }
 };
 
 // Initialize everything
 document.addEventListener('DOMContentLoaded', function() {
   loadTheme();
-  initDatabase();
+  
+  console.log('🚀 Initializing TV Schedule...');
+  
+  render();
+  document.getElementById('loadingMsg').style.display = 'none';
+  document.getElementById('grid').style.display = 'grid';
   
   // Global view counter
   fetch('https://api.countapi.xyz/hit/kndtv/v1')
