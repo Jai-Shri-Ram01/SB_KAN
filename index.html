@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Kannada TV Schedule – SB-KAN</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
 <style>
 :root{
   --bg:#f8fafc;--cardBG:#fff;--text:#212b36;--accent:#3b82f6;--brand:#8b5cf6;
@@ -46,6 +47,13 @@ body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-famil
 .title{font-weight:700}
 .info{font-style:italic;color:var(--brand);font-size:13px}
 .time{background:var(--modalAccent,#3b82f6);color:#fff;border-radius:13px;padding:5px 12px;font-size:13px;font-weight:600}
+.admin-form{padding:15px}
+.admin-form input,.admin-form select{width:100%;padding:8px;border-radius:5px;border:1px solid #ccc;margin-bottom:10px;background:var(--cardBG);color:var(--text)}
+.admin-form button{background:#3b82f6;color:white;padding:10px 20px;border:none;border-radius:5px;cursor:pointer}
+.admin-show-item{background:var(--glass);padding:10px;margin:5px 0;border-radius:5px;display:flex;justify-content:space-between;align-items:center}
+.admin-show-buttons button{margin-left:5px;padding:5px 10px;border:none;border-radius:3px;cursor:pointer}
+.edit-btn{background:#f97316;color:white}
+.delete-btn{background:#ef4444;color:white}
 @media(max-width:900px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -54,6 +62,7 @@ body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-famil
   <h1 class="h-title">📺 Kannada TV Schedule</h1>
   <div class="toolbar">
     <button id="modeBtn" class="btn">🌚 Dark</button>
+    <button id="adminBtn" class="btn">🔧 Admin</button>
     <a class="btn primary" href="https://t.me/SB_KAN" target="_blank">SB-KAN @SB_KAN</a>
   </div>
 </header>
@@ -78,12 +87,49 @@ body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-famil
   </div>
   <div class="vlist-viewport"><ul id="list" class="list"></ul></div>
 </div>
+
+<!-- Admin Modal -->
+<div id="adminModal" class="modal">
+  <div class="m-head">
+    <div class="m-title">Admin Panel</div>
+    <button id="adminBackBtn" class="m-back">← Back</button>
+  </div>
+  <div class="vlist-viewport">
+    <div class="admin-form">
+      <form id="showForm">
+        <select id="sectionSelect">
+          <option value="zee-afternoon">Zee Afternoon Shows</option>
+          <option value="zee-evening">Zee Evening Shows</option>
+          <option value="zee-weekend">Zee Weekend Specials</option>
+          <option value="colors-daily">Colors Daily Shows</option>
+          <option value="colors-weekend">Colors Weekend Shows</option>
+          <option value="suvarna-daily">Suvarna Daily Programs</option>
+          <option value="udaya-evening">Udaya Evening Lineup</option>
+          <option value="power-lineup">Power Lineup</option>
+        </select>
+        <input type="text" id="showName" placeholder="Show Name" required>
+        <input type="text" id="showTime" placeholder="Time (e.g., 6:00 PM)" required>
+        <input type="text" id="showInfo" placeholder="Info (optional)">
+        <button type="submit" id="submitBtn">Add Show</button>
+      </form>
+      <div id="adminShowsList"></div>
+    </div>
+  </div>
+</div>
+
 <script>
+// Database variables
+let db;
+let SQL;
+
+// Section color mapping
 const sectionAccents={
   'zee-afternoon':'#3b82f6','zee-evening':'#a78bfa','zee-weekend':'#ef4444',
   'colors-daily':'#f97316','colors-weekend':'#ef4444','suvarna-daily':'#f59e0b',
   'udaya-evening':'#60a5fa','power-lineup':'#10b981','weekend-shows':'#8b5cf6'
 };
+
+// Channels configuration
 const channels=[
   {name:'Zee Kannada',logo:'📺',link:'https://t.me/+HhovoiYWRFNjY2M1',sections:[
     {title:'Afternoon Shows',key:'zee-afternoon'},
@@ -100,7 +146,9 @@ const channels=[
     {title:'Power Lineup',key:'power-lineup'}]},
   {name:'Weekend Shows',logo:'⏰',link:'https://t.me/+l5l4SfW3Z_k4OWRl',sections:[]}
 ];
-const shows={
+
+// Initial shows data for migration
+const initialShows={
   'zee-afternoon':[
     {name:'Maharishi Vaani',time:'8:00 – 9:30 AM'},
     {name:'Annapoorna',time:'1:00 PM'},
@@ -184,6 +232,145 @@ const shows={
   ]
 };
 
+let shows = {};
+
+// Database functions
+async function initDatabase() {
+  try {
+    SQL = await initSqlJs({
+      locateFile: file => `https://sql.js.org/dist/${file}`
+    });
+
+    const savedDb = localStorage.getItem('kannadaTVDB');
+    
+    if (savedDb) {
+      try {
+        const data = new Uint8Array(JSON.parse(savedDb));
+        db = new SQL.Database(data);
+      } catch (error) {
+        console.error('Error loading saved database:', error);
+        db = new SQL.Database();
+        createTables();
+        migrateExistingData();
+      }
+    } else {
+      db = new SQL.Database();
+      createTables();
+      migrateExistingData();
+    }
+    
+    updateShowsFromDB();
+  } catch (error) {
+    console.error('Database initialization failed:', error);
+    // Fallback to original shows data
+    shows = initialShows;
+  }
+}
+
+function createTables() {
+  db.run(`
+    CREATE TABLE shows (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      section_key TEXT NOT NULL,
+      name TEXT NOT NULL,
+      time_slot TEXT NOT NULL,
+      info TEXT DEFAULT ''
+    );
+  `);
+}
+
+function migrateExistingData() {
+  Object.keys(initialShows).forEach(sectionKey => {
+    initialShows[sectionKey].forEach(show => {
+      db.run(
+        'INSERT INTO shows (section_key, name, time_slot, info) VALUES (?, ?, ?, ?)',
+        [sectionKey, show.name, show.time, show.info || '']
+      );
+    });
+  });
+  saveDatabase();
+}
+
+function addShow(sectionKey, name, timeSlot, info = '') {
+  try {
+    db.run(
+      'INSERT INTO shows (section_key, name, time_slot, info) VALUES (?, ?, ?, ?)',
+      [sectionKey, name, timeSlot, info]
+    );
+    saveDatabase();
+    updateShowsFromDB();
+    return true;
+  } catch (error) {
+    console.error('Error adding show:', error);
+    return false;
+  }
+}
+
+function updateShow(id, name, timeSlot, info) {
+  try {
+    db.run(
+      'UPDATE shows SET name = ?, time_slot = ?, info = ? WHERE id = ?',
+      [name, timeSlot, info, id]
+    );
+    saveDatabase();
+    updateShowsFromDB();
+    return true;
+  } catch (error) {
+    console.error('Error updating show:', error);
+    return false;
+  }
+}
+
+function deleteShow(id) {
+  try {
+    db.run('DELETE FROM shows WHERE id = ?', [id]);
+    saveDatabase();
+    updateShowsFromDB();
+    return true;
+  } catch (error) {
+    console.error('Error deleting show:', error);
+    return false;
+  }
+}
+
+function getShowsBySection(sectionKey) {
+  try {
+    const stmt = db.prepare('SELECT * FROM shows WHERE section_key = ? ORDER BY time_slot');
+    const results = [];
+    stmt.bind([sectionKey]);
+    while (stmt.step()) {
+      results.push(stmt.getAsObject());
+    }
+    stmt.free();
+    return results;
+  } catch (error) {
+    console.error('Error getting shows:', error);
+    return [];
+  }
+}
+
+function updateShowsFromDB() {
+  Object.keys(initialShows).forEach(sectionKey => {
+    const dbShows = getShowsBySection(sectionKey);
+    shows[sectionKey] = dbShows.map(show => ({
+      name: show.name,
+      time: show.time_slot,
+      info: show.info
+    }));
+  });
+  render();
+}
+
+function saveDatabase() {
+  try {
+    const data = db.export();
+    localStorage.setItem('kannadaTVDB', JSON.stringify(Array.from(data)));
+  } catch (error) {
+    console.error('Error saving database:', error);
+  }
+}
+
+// Render functions
 function render(){
   const grid=document.getElementById('grid');
   grid.innerHTML='';
@@ -229,23 +416,133 @@ function openSec(key,title){
   document.getElementById('modal').style.display='block';
 }
 
+// Admin functions
+function showAdminPanel() {
+  const password = prompt('Enter admin password:');
+  if (password === 'admin123') { // CHANGE THIS PASSWORD!
+    document.getElementById('overlay').style.display = 'block';
+    document.getElementById('adminModal').style.display = 'block';
+    loadAdminShows();
+  } else if (password !== null) {
+    alert('Wrong password!');
+  }
+}
+
+function loadAdminShows() {
+  const sectionKey = document.getElementById('sectionSelect').value;
+  const showsList = document.getElementById('adminShowsList');
+  const dbShows = getShowsBySection(sectionKey);
+  
+  showsList.innerHTML = '<h4>Current Shows (' + dbShows.length + '):</h4>' + 
+    dbShows.map(show => `
+      <div class="admin-show-item">
+        <div>
+          <strong>${show.name}</strong><br>
+          <small>${show.time_slot} ${show.info ? '- ' + show.info : ''}</small>
+        </div>
+        <div class="admin-show-buttons">
+          <button class="edit-btn" onclick="editShow(${show.id}, '${show.name.replace(/'/g, "\\'")}', '${show.time_slot}', '${(show.info || '').replace(/'/g, "\\'")}')">Edit</button>
+          <button class="delete-btn" onclick="deleteShowConfirm(${show.id})">Delete</button>
+        </div>
+      </div>
+    `).join('');
+}
+
+let editingShowId = null;
+
+function editShow(id, name, timeSlot, info) {
+  document.getElementById('showName').value = name;
+  document.getElementById('showTime').value = timeSlot;
+  document.getElementById('showInfo').value = info || '';
+  document.getElementById('submitBtn').textContent = 'Update Show';
+  editingShowId = id;
+}
+
+function deleteShowConfirm(id) {
+  if (confirm('Are you sure you want to delete this show?')) {
+    if (deleteShow(id)) {
+      loadAdminShows();
+    } else {
+      alert('Error deleting show. Please try again.');
+    }
+  }
+}
+
+function handleAddShow(e) {
+  e.preventDefault();
+  const sectionKey = document.getElementById('sectionSelect').value;
+  const name = document.getElementById('showName').value;
+  const timeSlot = document.getElementById('showTime').value;
+  const info = document.getElementById('showInfo').value;
+  
+  let success = false;
+  
+  if (editingShowId) {
+    success = updateShow(editingShowId, name, timeSlot, info);
+    editingShowId = null;
+    document.getElementById('submitBtn').textContent = 'Add Show';
+  } else {
+    success = addShow(sectionKey, name, timeSlot, info);
+  }
+  
+  if (success) {
+    document.getElementById('showForm').reset();
+    loadAdminShows();
+  } else {
+    alert('Error saving show. Please try again.');
+  }
+}
+
+// Event listeners
 document.getElementById('modeBtn').onclick=()=>{
   const html=document.documentElement;
   const dark=html.getAttribute('data-dark')==='true';
   html.setAttribute('data-dark',!dark);
   document.getElementById('modeBtn').textContent=!dark?'🌞 Light':'🌚 Dark';
 };
+
 document.getElementById('backBtn').onclick=document.getElementById('overlay').onclick=()=>{
   document.getElementById('overlay').style.display='none';
   document.getElementById('modal').style.display='none';
+  document.getElementById('adminModal').style.display='none';
   document.querySelectorAll('.section').forEach(e=>e.classList.remove('selected'));
+  editingShowId = null;
+  document.getElementById('submitBtn').textContent = 'Add Show';
 };
-render();
 
-// global view counter
+document.getElementById('adminBtn').onclick = showAdminPanel;
+
+document.getElementById('adminBackBtn').onclick = () => {
+  document.getElementById('overlay').style.display = 'none';
+  document.getElementById('adminModal').style.display = 'none';
+  editingShowId = null;
+  document.getElementById('submitBtn').textContent = 'Add Show';
+  document.getElementById('showForm').reset();
+};
+
+document.getElementById('showForm').onsubmit = handleAddShow;
+
+document.getElementById('sectionSelect').onchange = () => {
+  loadAdminShows();
+  editingShowId = null;
+  document.getElementById('submitBtn').textContent = 'Add Show';
+  document.getElementById('showForm').reset();
+};
+
+// Initialize everything
+initDatabase().then(() => {
+  console.log('Database initialized successfully');
+}).catch(error => {
+  console.error('Database initialization failed, using fallback data:', error);
+  shows = initialShows;
+  render();
+});
+
+// Global view counter
 fetch('https://api.countapi.xyz/hit/kndtv/v1')
   .then(r=>r.json())
-  .then(d=>{document.getElementById('siteViews').textContent=`${d.value} views`;});
+  .then(d=>{document.getElementById('siteViews').textContent=`${d.value} views`;})
+  .catch(()=>{});
 </script>
 </body>
 </html>
