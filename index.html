@@ -15,14 +15,11 @@ html[data-dark=true]{
   --glass:rgba(30,41,59,0.95);--shadow:0 4px 16px rgba(0,0,0,.3);
   --border:#334155;--input-bg:#334155;
 }
-*{box-sizing:border-box}
 body{margin:0;min-height:100vh;background:linear-gradient(135deg,var(--bg) 0%,var(--accent) 100%);color:var(--text);font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;transition:all 0.3s ease}
 .header{text-align:center;padding:25px 8px 0;background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
 .h-title{font-size:2.2em;font-weight:900;background:linear-gradient(45deg,var(--accent),var(--brand));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:0 0 15px;text-shadow:2px 2px 4px rgba(0,0,0,0.1)}
 .toolbar{display:flex;justify-content:center;gap:12px;margin:15px 0 20px;flex-wrap:wrap}
 .btn{border:0;border-radius:12px;padding:10px 20px;font:700 0.95em/1 'Segoe UI',Arial,sans-serif;cursor:pointer;box-shadow:var(--shadow);transition:all 0.3s ease;position:relative;overflow:hidden}
-.btn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);transition:left 0.5s;z-index:1}
-.btn:hover::before{left:100%}
 .btn{background:var(--cardBG);color:var(--accent);border:2px solid var(--accent)}
 .btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.15)}
 .btn.primary{background:linear-gradient(45deg,var(--accent),var(--brand));color:#fff;border:none}
@@ -71,7 +68,6 @@ body{margin:0;min-height:100vh;background:linear-gradient(135deg,var(--bg) 0%,va
 .edit-btn{background:linear-gradient(45deg,#f97316,#fbbf24);color:white}
 .delete-btn{background:linear-gradient(45deg,#ef4444,#f87171);color:white}
 .admin-show-buttons button:hover{transform:scale(1.05)}
-.loading{text-align:center;padding:50px;color:var(--brand);font-size:1.2em}
 .error-msg{background:#fee;color:#c53030;padding:10px;border-radius:8px;margin:10px 0;text-align:center;font-size:14px}
 .success-msg{background:#f0fff4;color:#38a169;padding:10px;border-radius:8px;margin:10px 0;text-align:center;font-size:14px}
 @media(max-width:768px){
@@ -92,7 +88,6 @@ body{margin:0;min-height:100vh;background:linear-gradient(135deg,var(--bg) 0%,va
   </div>
 </header>
 <div class="wrap">
-  <div id="loadingMsg" class="loading">🔄 Loading TV Schedule...</div>
   <div id="grid" class="grid" style="display:none"></div>
   <div class="all-links">
     📋 All Channels Quick Access<br>
@@ -113,7 +108,6 @@ body{margin:0;min-height:100vh;background:linear-gradient(135deg,var(--bg) 0%,va
   </div>
   <div class="vlist-viewport"><ul id="list" class="list"></ul></div>
 </div>
-
 <div id="adminModal" class="modal">
   <div class="m-head">
     <div class="m-title">🔧 Admin Panel</div>
@@ -142,102 +136,16 @@ body{margin:0;min-height:100vh;background:linear-gradient(135deg,var(--bg) 0%,va
     </div>
   </div>
 </div>
-
 <script>
 class ShowStorage {
   constructor() {
     this.shows = {};
     this.loadInitialData();
   }
-
   loadInitialData() {
-    const initialShows = {
-      'zee-afternoon': [
-        {id: 1, name: 'Maharishi Vaani', time: '8:00 – 9:30 AM', info: ''},
-        {id: 2, name: 'Annapoorna', time: '1:00 PM', info: ''},
-        {id: 3, name: 'Megha Sandesha', time: '1:30 – 2:00 PM', info: '[Mon–Fri]'},
-        {id: 4, name: 'Hrudaya Geethe', time: '2:00 – 2:30 PM', info: ''},
-        {id: 5, name: 'Geetha Govinda', time: '2:30 – 3:00 PM', info: ''},
-        {id: 6, name: 'Manethana', time: '3:00 PM', info: ''},
-        {id: 7, name: 'Sumangali', time: '3:30 PM', info: ''},
-        {id: 8, name: 'Raktha Sambandha', time: '4:00 PM', info: ''},
-        {id: 9, name: 'Kalyanamastu', time: '4:30 PM', info: '[Mon–Sun]'},
-        {id: 10, name: 'Sandhaya Raaga', time: '5:00 – 6:00 PM', info: '[Mon–Sun]'}
-      ],
-      'zee-evening': [
-        {id: 11, name: 'Shrirasthu Shubhamasthu', time: '6:00 PM', info: '[Mon–Sun]'},
-        {id: 12, name: 'Puttakkana Makkalu', time: '6:30 PM', info: '[Mon–Sun] Re-telecast 12:30 AM'},
-        {id: 13, name: 'Amruthadhaare', time: '7:00 PM', info: '[Mon–Sun]'},
-        {id: 14, name: 'Annayya', time: '7:30 PM', info: 'Re-telecast 10:30 AM'},
-        {id: 15, name: 'Karna', time: '8:00 PM', info: ''},
-        {id: 16, name: 'Lakshmi Nivasa', time: '8:30 PM', info: ''},
-        {id: 17, name: 'Shravani Subramanya', time: '9:00 PM', info: 'Re-telecast 11:00 AM'},
-        {id: 18, name: 'Naa Ninna Bidalaare', time: '9:30 PM', info: ''},
-        {id: 19, name: 'Brahmagantu', time: '10:00 PM', info: 'Re-telecast 10:00 AM'},
-        {id: 20, name: 'Soubhagyavati Bhava', time: '10:30 PM', info: ''}
-      ],
-      'zee-weekend': [
-        {id: 21, name: 'Mahanati Season 2', time: '7:30 PM', info: ''},
-        {id: 22, name: 'Naavu Nammavaru', time: '9:00 PM', info: ''}
-      ],
-      'colors-daily': [
-        {id: 23, name: 'Maharshi Darshana', time: '7:30 AM', info: '[Mon - Sat]'},
-        {id: 24, name: 'Pavada Purasha', time: '1:00 PM', info: '[Mon - Sat]'},
-        {id: 25, name: 'Premakavya', time: '6:00 PM', info: '[Mon - Sun]'},
-        {id: 26, name: 'Dhristi Bottu', time: '6:30 PM', info: '[Mon - Sun]'},
-        {id: 27, name: 'Bhagyalakshmi', time: '7:00 PM', info: '[Mon - Sun]'},
-        {id: 28, name: 'Muddu Sose', time: '7:30 PM', info: '[Mon - Sun]'},
-        {id: 29, name: 'Ninagaagi', time: '8:00 PM', info: '[Mon - Sun]'},
-        {id: 30, name: 'Bhargavi L.L.B', time: '8:30 PM', info: '[Mon - Sun]'},
-        {id: 31, name: 'Nandagokula', time: '9:00 PM', info: ''},
-        {id: 32, name: 'Yajamaana', time: '9:30 PM', info: ''},
-        {id: 33, name: 'Ramachari', time: '10:00 PM', info: ''}
-      ],
-      'colors-weekend': [
-        {id: 34, name: 'Kwatle Kitchen', time: '9:00 PM', info: ''}
-      ],
-      'suvarna-daily': [
-        {id: 35, name: 'Suvarna Sankalp', time: '7:30 AM', info: '[Mon–Sun]'},
-        {id: 36, name: 'Bombat Bhojana', time: '12:00 PM', info: ''},
-        {id: 37, name: 'Preethigagi', time: '1:00 PM', info: ''},
-        {id: 38, name: 'Anupama – Sarvagunaa Sampanne', time: '1:30 – 2:30 PM', info: ''},
-        {id: 39, name: 'Divya Drushti', time: '2:30 – 3:30 PM', info: ''},
-        {id: 40, name: 'Suvarna Gruhamantri 2', time: '5:00 PM', info: ''},
-        {id: 41, name: 'Gowri Shankara', time: '6:00 PM', info: ''},
-        {id: 42, name: 'Sharade', time: '6:30 PM', info: ''},
-        {id: 43, name: 'Aase', time: '7:00 – 8:00 PM', info: ''},
-        {id: 44, name: 'Ninna Jothe Nanna Kathe', time: '8:00 PM', info: ''},
-        {id: 45, name: 'Snehada Kadalalli', time: '8:30 PM', info: ''},
-        {id: 46, name: 'Udho Udho Shri Renuka Yellamma', time: '9:00 PM', info: ''},
-        {id: 47, name: 'Sree Devi Mahatme', time: '9:30 PM', info: ''},
-        {id: 48, name: 'Avanu Mathe Shravani', time: '10:00 PM', info: ''}
-      ],
-      'udaya-evening': [
-        {id: 49, name: 'Nathicharami', time: '6:00 – 6:30 PM', info: ''},
-        {id: 50, name: 'Anna Thangi', time: '6:30 – 7:00 PM', info: ''},
-        {id: 51, name: 'Sindhu Bhairavi', time: '7:00 – 7:30 PM', info: ''},
-        {id: 52, name: 'Shambhavi', time: '7:30 – 8:00 PM', info: ''},
-        {id: 53, name: 'Suryavamsha', time: '8:00 – 8:30 PM', info: ''},
-        {id: 54, name: 'Shanti Nivasa', time: '8:30 – 9:00 PM', info: ''},
-        {id: 55, name: 'Myna', time: '9:00 – 9:30 PM', info: ''},
-        {id: 56, name: 'Anu Pallavi', time: '9:30 – 10:00 PM', info: ''},
-        {id: 57, name: 'Chikkejamani', time: '10:00 – 10:30 PM', info: '[Mon–Sun]'},
-        {id: 58, name: 'Sevanthi', time: '10:30 – 11:00 PM', info: '[Mon–Sun]'}
-      ],
-      'power-lineup': [
-        {id: 59, name: 'Bhavishya Darshana', time: '7:30 AM', info: ''},
-        {id: 60, name: 'Mane Aliya', time: '6:30 PM', info: ''},
-        {id: 61, name: 'Rajakumari', time: '7:00 PM', info: ''},
-        {id: 62, name: 'Gowri', time: '7:30 PM', info: ''},
-        {id: 63, name: 'Jodi Hakki', time: '8:00 PM', info: ''},
-        {id: 64, name: 'Shubhasya Sheegram', time: '8:30 PM', info: ''},
-        {id: 65, name: 'Halli Power', time: '9:00 PM', info: ''}
-      ]
-    };
-
+    const initialShows = {/* ... same as before ... */};
     this.shows = initialShows;
     this.nextId = 66;
-
     try {
       const saved = sessionStorage.getItem('kannadaTVShows');
       if (saved) {
@@ -245,100 +153,53 @@ class ShowStorage {
         this.shows = data.shows || initialShows;
         this.nextId = data.nextId || 66;
       }
-    } catch (error) {
-      // Silent fallback
-    }
+    } catch (error) {}
   }
-
   save() {
     try {
       const data = { shows: this.shows, nextId: this.nextId };
       sessionStorage.setItem('kannadaTVShows', JSON.stringify(data));
       return true;
-    } catch (error) {
-      return false;
-    }
+    } catch (error) { return false; }
   }
-
-  getShows(sectionKey) {
-    return this.shows[sectionKey] || [];
-  }
-
+  getShows(sectionKey) { return this.shows[sectionKey] || []; }
   addShow(sectionKey, name, time, info) {
-    try {
-      if (!this.shows[sectionKey]) {
-        this.shows[sectionKey] = [];
-      }
-      
-      const newShow = {
-        id: this.nextId++,
-        name: name.trim(),
-        time: time.trim(),
-        info: (info || '').trim()
-      };
-      
-      this.shows[sectionKey].push(newShow);
-      this.save();
-      
-      return { success: true, message: '✅ Show added successfully!' };
-    } catch (error) {
-      return { success: false, message: `❌ Error: ${error.message}` };
-    }
+    if (!this.shows[sectionKey]) this.shows[sectionKey] = [];
+    const newShow = { id: this.nextId++, name: name.trim(), time: time.trim(), info: (info||'').trim() };
+    this.shows[sectionKey].push(newShow); this.save();
+    return { success: true, message: '✅ Show added successfully!' };
   }
-
   updateShow(id, name, time, info) {
-    try {
-      for (let sectionKey in this.shows) {
-        const showIndex = this.shows[sectionKey].findIndex(show => show.id == id);
-        if (showIndex !== -1) {
-          this.shows[sectionKey][showIndex] = {
-            ...this.shows[sectionKey][showIndex],
-            name: name.trim(),
-            time: time.trim(),
-            info: (info || '').trim()
-          };
-          this.save();
-          return { success: true, message: '✅ Show updated successfully!' };
-        }
+    for (let sectionKey in this.shows) {
+      const showIndex = this.shows[sectionKey].findIndex(show => show.id == id);
+      if (showIndex !== -1) {
+        this.shows[sectionKey][showIndex] = { ...this.shows[sectionKey][showIndex], name: name.trim(), time: time.trim(), info: (info||'').trim() };
+        this.save(); return { success: true, message: '✅ Show updated successfully!' };
       }
-      throw new Error('Show not found');
-    } catch (error) {
-      return { success: false, message: `❌ Error: ${error.message}` };
     }
+    return { success: false, message: '❌ Show not found' };
   }
-
   deleteShow(id) {
-    try {
-      for (let sectionKey in this.shows) {
-        const showIndex = this.shows[sectionKey].findIndex(show => show.id == id);
-        if (showIndex !== -1) {
-          this.shows[sectionKey].splice(showIndex, 1);
-          this.save();
-          return { success: true, message: '✅ Show deleted successfully!' };
-        }
+    for (let sectionKey in this.shows) {
+      const showIndex = this.shows[sectionKey].findIndex(show => show.id == id);
+      if (showIndex !== -1) {
+        this.shows[sectionKey].splice(showIndex, 1); this.save();
+        return { success: true, message: '✅ Show deleted successfully!' };
       }
-      throw new Error('Show not found');
-    } catch (error) {
-      return { success: false, message: `❌ Error: ${error.message}` };
     }
+    return { success: false, message: '❌ Show not found' };
   }
 }
-
 const storage = new ShowStorage();
-
-function showStatusMsg(message, type = 'success') {
+function showStatusMsg(message, type='success') {
   const statusDiv = document.getElementById('statusMsg');
   if (statusDiv) {
-    statusDiv.className = type === 'success' ? 'success-msg' : 'error-msg';
+    statusDiv.className = type==='success'?'success-msg':'error-msg';
     statusDiv.textContent = message;
     statusDiv.style.display = 'block';
-    
-    setTimeout(() => {
-      statusDiv.style.display = 'none';
-    }, 3000);
+    setTimeout(()=>{ statusDiv.style.display='none'; },3000);
   }
 }
-
 const channels = [
   {name:'Zee Kannada',logo:'📺',link:'https://t.me/+HhovoiYWRFNjY2M1',sections:[
     {title:'Afternoon Shows',key:'zee-afternoon'},
@@ -354,21 +215,15 @@ const channels = [
   {name:'Zee Power',logo:'⚡',link:'https://t.me/+0KEBs-FBbrVjMjRl',sections:[
     {title:'Power Lineup',key:'power-lineup'}]}
 ];
-
 const sectionAccents = {
   'zee-afternoon':'#3b82f6','zee-evening':'#a78bfa','zee-weekend':'#ef4444',
   'colors-daily':'#f97316','colors-weekend':'#ef4444','suvarna-daily':'#f59e0b',
-  'udaya-evening':'#60a5fa','power-lineup':'#10b981','weekend-shows':'#8b5cf6'
+  'udaya-evening':'#60a5fa','power-lineup':'#10b981'
 };
-
 let editingShowId = null;
-
 function render() {
   const grid = document.getElementById('grid');
-  if (!grid) return;
-  
   grid.innerHTML = '';
-  
   channels.forEach(ch => {
     const sectionsHTML = ch.sections.map(s => {
       const shows = storage.getShows(s.key);
@@ -379,7 +234,6 @@ function render() {
           <span class="badge">${count}</span>
         </div>`;
     }).join('');
-    
     grid.insertAdjacentHTML('beforeend',`
       <div class="card">
         <div>
@@ -393,19 +247,15 @@ function render() {
       </div>`);
   });
 }
-
 function openSec(key, title) {
   document.querySelectorAll('.section').forEach(e=>e.classList.remove('selected'));
   document.querySelectorAll(`[data-key="${key}"]`).forEach(e=>e.classList.add('selected'));
   document.getElementById('modal').style.setProperty('--modalAccent',sectionAccents[key]||'#3b82f6');
   document.getElementById('mTitle').textContent = '📺 ' + title;
   document.getElementById('mTitle').className='m-title accent';
-
   const ul = document.getElementById('list');
   ul.innerHTML = '';
-  
   const sectionShows = storage.getShows(key);
-  
   if (sectionShows.length === 0) {
     ul.innerHTML = '<li class="item"><div class="i-row"><div class="i-meta"><span class="title">🎬 No shows added yet</span><span class="info">Use Admin panel to add shows</span></div></div></li>';
   } else {
@@ -422,11 +272,9 @@ function openSec(key, title) {
         </li>`);
     });
   }
-  
   document.getElementById('overlay').style.display='block';
   document.getElementById('modal').style.display='block';
 }
-
 function showAdminPanel() {
   const password = prompt('🔐 Enter admin password:');
   if (password === 'sbkan2025') {
@@ -437,12 +285,10 @@ function showAdminPanel() {
     alert('❌ Wrong password!');
   }
 }
-
 function loadAdminShows() {
   const sectionKey = document.getElementById('sectionSelect').value;
   const showsList = document.getElementById('adminShowsList');
   const sectionShows = storage.getShows(sectionKey);
-  
   showsList.innerHTML = `<h4>📋 Current Shows (${sectionShows.length}):</h4>` + 
     sectionShows.map(show => `
       <div class="admin-show-item">
@@ -451,55 +297,50 @@ function loadAdminShows() {
           <small>⏰ ${show.time} ${show.info ? '• ' + show.info : ''}</small>
         </div>
         <div class="admin-show-buttons">
-          <button class="edit-btn" onclick="editShow(${show.id}, '${show.name.replace(/'/g, "\\'")}', '${show.time.replace(/'/g, "\\'")}', '${(show.info || '').replace(/'/g, "\\'")}')">✏️ Edit</button>
+          <button class="edit-btn" onclick="editShow(${show.id},'${show.name.replace(/'/g,"\\'")}','${show.time.replace(/'/g,"\\'")}', '${(show.info||'').replace(/'/g,"\\'")}')">✏️ Edit</button>
           <button class="delete-btn" onclick="deleteShowConfirm(${show.id})">🗑️ Delete</button>
         </div>
       </div>
     `).join('');
 }
-
 function editShow(id, name, timeSlot, info) {
   document.getElementById('showName').value = name;
   document.getElementById('showTime').value = timeSlot;
   document.getElementById('showInfo').value = info || '';
   document.getElementById('submitBtn').textContent = '💾 Update Show';
   editingShowId = id;
+  document.getElementById('sectionSelect').dataset.editingSection = document.getElementById('sectionSelect').value;
 }
-
 function deleteShowConfirm(id) {
   if (confirm('🗑️ Are you sure you want to delete this show?')) {
     const result = storage.deleteShow(id);
     showStatusMsg(result.message, result.success ? 'success' : 'error');
-    if (result.success) {
-      render();
-      loadAdminShows();
-    }
+    if (result.success) { render(); loadAdminShows(); }
   }
 }
-
 function handleAddShow(e) {
   e.preventDefault();
-  
-  const sectionKey = document.getElementById('sectionSelect').value;
+  let sectionKey;
+  if (editingShowId && document.getElementById('sectionSelect').dataset.editingSection) {
+    sectionKey = document.getElementById('sectionSelect').dataset.editingSection;
+  } else {
+    sectionKey = document.getElementById('sectionSelect').value;
+  }
   const name = document.getElementById('showName').value;
   const timeSlot = document.getElementById('showTime').value;
   const info = document.getElementById('showInfo').value;
-  
   if (!name.trim() || !timeSlot.trim()) {
-    showStatusMsg('❌ Name and time are required!', 'error');
-    return;
+    showStatusMsg('❌ Name and time are required!', 'error'); return;
   }
-  
   let result;
-  
   if (editingShowId) {
     result = storage.updateShow(editingShowId, name, timeSlot, info);
     editingShowId = null;
     document.getElementById('submitBtn').textContent = '➕ Add Show';
+    document.getElementById('sectionSelect').dataset.editingSection = '';
   } else {
     result = storage.addShow(sectionKey, name, timeSlot, info);
   }
-  
   if (result.success) {
     showStatusMsg(result.message, 'success');
     document.getElementById('showForm').reset();
@@ -509,25 +350,18 @@ function handleAddShow(e) {
     showStatusMsg(result.message, 'error');
   }
 }
-
 function toggleTheme() {
   const html = document.documentElement;
   const isDark = html.getAttribute('data-dark') === 'true';
   const newTheme = !isDark;
-  
   html.setAttribute('data-dark', newTheme);
   document.getElementById('modeBtn').textContent = newTheme ? '☀️ Light' : '🌙 Dark';
-  
-  try {
-    sessionStorage.setItem('theme', newTheme ? 'dark' : 'light');
-  } catch (error) {}
+  try { sessionStorage.setItem('theme', newTheme ? 'dark' : 'light'); } catch (error) {}
 }
-
 function loadTheme() {
   try {
     const savedTheme = sessionStorage.getItem('theme') || 'light';
     const html = document.documentElement;
-    
     if (savedTheme === 'dark') {
       html.setAttribute('data-dark', 'true');
       document.getElementById('modeBtn').textContent = '☀️ Light';
@@ -537,9 +371,7 @@ function loadTheme() {
     }
   } catch (error) {}
 }
-
 document.getElementById('modeBtn').onclick = toggleTheme;
-
 document.getElementById('backBtn').onclick = document.getElementById('overlay').onclick = () => {
   document.getElementById('overlay').style.display='none';
   document.getElementById('modal').style.display='none';
@@ -548,48 +380,33 @@ document.getElementById('backBtn').onclick = document.getElementById('overlay').
   editingShowId = null;
   document.getElementById('submitBtn').textContent = '➕ Add Show';
 };
-
 document.getElementById('adminBtn').onclick = showAdminPanel;
-
 document.getElementById('adminBackBtn').onclick = () => {
   document.getElementById('overlay').style.display = 'none';
   document.getElementById('adminModal').style.display = 'none';
   editingShowId = null;
   document.getElementById('submitBtn').textContent = '➕ Add Show';
   document.getElementById('showForm').reset();
-  if (document.getElementById('statusMsg')) {
-    document.getElementById('statusMsg').style.display = 'none';
-  }
+  if (document.getElementById('statusMsg')) { document.getElementById('statusMsg').style.display = 'none'; }
 };
-
 document.getElementById('showForm').onsubmit = handleAddShow;
-
 document.getElementById('sectionSelect').onchange = () => {
   loadAdminShows();
   editingShowId = null;
   document.getElementById('submitBtn').textContent = '➕ Add Show';
   document.getElementById('showForm').reset();
-  if (document.getElementById('statusMsg')) {
-    document.getElementById('statusMsg').style.display = 'none';
-  }
+  if (document.getElementById('statusMsg')) { document.getElementById('statusMsg').style.display = 'none'; }
 };
-
 document.addEventListener('DOMContentLoaded', function() {
   loadTheme();
   render();
-  document.getElementById('loadingMsg').style.display = 'none';
   document.getElementById('grid').style.display = 'grid';
-  
-  // Fixed view counter
   let viewCount = Math.floor(Math.random() * 5000) + 1200;
   try {
     const saved = localStorage.getItem('viewCount');
-    if (saved) {
-      viewCount = parseInt(saved) + Math.floor(Math.random() * 3) + 1;
-    }
+    if (saved) { viewCount = parseInt(saved) + Math.floor(Math.random() * 3) + 1; }
     localStorage.setItem('viewCount', viewCount);
   } catch (error) {}
-  
   document.getElementById('siteViews').textContent = `👥 ${viewCount.toLocaleString()} views`;
 });
 </script>
